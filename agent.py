@@ -37,135 +37,107 @@ def parse_llm_output(llm_output):
     # This function reads the agent's response and extracts:
     # 1. The action name — which tool to use
     # 2. The action input — what to pass to the tool
-    #
-    # The problem before was that Action Input can span multiple lines
-    # For example the finish answer might be 5 lines long
-    # The old code only read the first line
-    # This new parser reads everything after "Action Input:" until the end
-    
+    # It handles multi-line inputs correctly
+
     action = None
     action_input = None
-    
+
     lines = llm_output.split("\n")
-    
+
     for i, line in enumerate(lines):
-        # Find the Action line and extract the tool name
         if line.startswith("Action:"):
             action = line.replace("Action:", "").strip().lower()
-        
-        # Find the Action Input line
-        # Then collect everything from that line onwards
-        # This captures multi-line inputs correctly
+
         if line.startswith("Action Input:"):
-            # Get the first line of the input
             first_line = line.replace("Action Input:", "").strip()
-            
-            # Get all remaining lines after this one
             remaining_lines = lines[i+1:]
-            
-            # Combine first line with all remaining lines
-            # This captures the full multi-line input
             all_input_lines = [first_line] + remaining_lines
-            
-            # Join them back together and strip empty space
             action_input = "\n".join(all_input_lines).strip()
-            
-            # Stop reading once we have the action input
             break
-    
+
     return action, action_input
 
 
 def run_agent(goal):
-    print(f"\nGOAL: {goal}\n")
-    print("=" * 50)
+    # This function is now a generator
+    # Instead of printing to the terminal it yields updates
+    # Each yield sends one piece of information to the Flask stream
+    # The webpage receives each update instantly as it happens
+    #
+    # Think of yield like a live reporter sending updates from the field
+    # Instead of waiting until the story is complete and sending it all at once
+    # He sends each update the moment it happens
+    # "Breaking news — Step 1 starting..."
+    # "Breaking news — Agent searched for X..."
+    # "Breaking news — Agent found these results..."
 
-    # This list stores the entire conversation history
-    # Every thought, action, and observation gets added here
-    # The LLM reads all of it each time so it remembers everything
+    yield f"GOAL: {goal}\n"
+    yield "=" * 50 + "\n"
+
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": f"Your goal is: {goal}"}
     ]
 
-    # Maximum number of steps before we force stop
-    # This prevents the agent from running forever
     max_steps = 10
 
     for step in range(1, max_steps + 1):
-        print(f"\n--- Step {step} ---")
+        yield f"\n--- Step {step} ---\n"
 
-        # Send the full conversation history to the LLM
-        # It reads everything that has happened so far and decides the next move
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=messages
         )
 
-        # Extract the text the LLM returned
         llm_output = response.choices[0].message.content
-        print(llm_output)
 
-        # Add the LLM response to conversation history
-        # So next time it remembers what it just said
+        # Send the agent's thought and action to the webpage
+        yield llm_output + "\n"
+
         messages.append({"role": "assistant", "content": llm_output})
 
-        # Use the new parser to extract action and action input
-        # This correctly handles multi-line inputs
         action, action_input = parse_llm_output(llm_output)
 
-        # If the LLM did not follow the format stop gracefully
         if not action:
-            print("\nAgent did not return a valid action. Stopping.")
+            yield "\nAgent did not return a valid action. Stopping.\n"
             break
 
-        # If the agent chose finish we are done
-        # We call the finish tool first so it saves the answer to output.txt
-        # Then we print the final answer and break out of the loop
         if action == "finish":
             TOOLS["finish"](action_input)
-            print("\n" + "=" * 50)
-            print("FINAL ANSWER:")
-            print(action_input)
-            print("=" * 50)
+            yield "\n" + "=" * 50 + "\n"
+            yield "FINAL ANSWER:\n"
+            yield action_input + "\n"
+            yield "=" * 50 + "\n"
             break
 
-        # If the agent chose a tool that exists call it
         if action in TOOLS:
             tool_function = TOOLS[action]
 
-            # If the agent is searching strip any years from the query
-            # This is a filter between the agent and Tavily
-            # It removes years like 2023 or 2024 automatically
-            # So the agent always gets the most recent results
             if action == "search":
                 action_input = re.sub(r'\b(19|20)\d{2}\b', '', action_input).strip()
 
             observation = tool_function(action_input)
 
-            print(f"\nOBSERVATION:\n{observation}")
+            # Send the observation to the webpage
+            yield f"\nOBSERVATION:\n{observation}\n"
 
-            # Add the observation to conversation history
-            # So the LLM can read the results and decide what to do next
             messages.append({
                 "role": "user",
                 "content": f"Observation: {observation}"
             })
 
         else:
-            # The agent tried to use a tool that does not exist
             messages.append({
                 "role": "user",
                 "content": f"Observation: Tool '{action}' does not exist. Please use only: search, summarise, save_to_file, or finish."
             })
 
     else:
-        # This runs if the loop completes all 10 steps without finishing
-        print("\nMax steps reached. Agent did not finish in time.")
+        yield "\nMax steps reached. Agent did not finish in time.\n"
 
 
-# Entry point — when you run python3 agent.py
-# it asks you to type a goal and runs the agent
+# This is kept for testing in the terminal if needed
 if __name__ == "__main__":
     goal = input("Enter your goal: ")
-    run_agent(goal)
+    for update in run_agent(goal):
+        print(update, end="")

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous Agent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #0f0f0f;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #00ff88;
+            margin-bottom: 8px;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 40px;
+            letter-spacing: 1px;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 14px 18px;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #00ff88;
+        }
+
+        input[type="text"]::placeholder {
+            color: #444;
+        }
+
+        button {
+            background-color: #00ff88;
+            color: #0f0f0f;
+            border: none;
+            border-radius: 6px;
+            padding: 14px 28px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #00cc6a;
+        }
+
+        button:disabled {
+            background-color: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .output-box {
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 24px;
+            min-height: 400px;
+            white-space: pre-wrap;
+            font-size: 13px;
+            line-height: 1.7;
+            overflow-y: auto;
+            max-height: 600px;
+        }
+
+        .output-box .step {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .output-box .thought {
+            color: #88aaff;
+        }
+
+        .output-box .action {
+            color: #ffaa00;
+        }
+
+        .output-box .observation {
+            color: #aaaaaa;
+        }
+
+        .output-box .final {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .placeholder-text {
+            color: #444;
+            font-size: 13px;
+        }
+
+        .status {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .status.running {
+            color: #ffaa00;
+        }
+
+        .status.done {
+            color: #00ff88;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AUTONOMOUS AGENT</h1>
+        <p class="subtitle">ReAct — Reason + Act</p>
+
+        <div class="input-section">
+            <input
+                type="text"
+                id="goalInput"
+                placeholder="Enter your research goal..."
+            />
+            <button id="runButton" onclick="runAgent()">RUN</button>
+        </div>
+
+        <div class="status" id="status">READY</div>
+
+        <div class="output-box" id="output">
+            <span class="placeholder-text">Agent output will appear here in real time...</span>
+        </div>
+    </div>
+
+    <script>
+        function runAgent() {
+            const goal = document.getElementById("goalInput").value.trim();
+
+            // If the user did not type anything stop here
+            if (!goal) {
+                alert("Please enter a goal first.");
+                return;
+            }
+
+            // Clear previous output and disable the button while running
+            document.getElementById("output").innerHTML = "";
+            document.getElementById("runButton").disabled = true;
+            document.getElementById("status").textContent = "RUNNING...";
+            document.getElementById("status").className = "status running";
+
+            // Create a form and send the goal to the /run route
+            const formData = new FormData();
+            formData.append("goal", goal);
+
+            // fetch sends the goal to Flask
+            // The response comes back as a stream of events
+            fetch("/run", {
+                method: "POST",
+                body: formData
+            }).then(response => {
+                // Get a reader to read the stream one chunk at a time
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                const outputBox = document.getElementById("output");
+
+                // This function reads one chunk then calls itself again
+                // It keeps reading until the stream ends
+                function readChunk() {
+                    reader.read().then(({ done, value }) => {
+
+                        // If the stream is finished stop reading
+                        if (done) {
+                            document.getElementById("runButton").disabled = false;
+                            document.getElementById("status").textContent = "DONE";
+                            document.getElementById("status").className = "status done";
+                            return;
+                        }
+
+                        // Decode the chunk from bytes to text
+                        const text = decoder.decode(value);
+
+                        // Server-Sent Events arrive as "data: [content]\n\n"
+                        // We split by newlines and process each line
+                        const lines = text.split("\n");
+                        lines.forEach(line => {
+                            if (line.startsWith("data: ")) {
+                                // Remove the "data: " prefix to get the actual content
+                                const content = line.replace("data: ", "");
+
+                                // Add the content to the output box
+                                outputBox.innerHTML += content + "\n";
+
+                                // Auto scroll to the bottom as new content arrives
+                                outputBox.scrollTop = outputBox.scrollHeight;
+                            }
+                        });
+
+                        // Read the next chunk
+                        readChunk();
+                    });
+                }
+
+                // Start reading
+                readChunk();
+            });
+        }
+
+        // Allow pressing Enter to run the agent
+        document.getElementById("goalInput").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                runAgent();
+            }
+        });
+    </script>
+</body>
+</html>
