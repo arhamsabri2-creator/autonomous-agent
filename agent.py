@@ -3,42 +3,43 @@ import re
 from openai import OpenAI
 from dotenv import load_dotenv
 from tools import TOOLS
+from memory import search_memory, get_memory_count
 
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-SYSTEM_PROMPT = """You are a reasoning agent. You work by thinking step by step and using tools to achieve a goal.
+SYSTEM_PROMPT = """You are a reasoning agent with memory. You work by thinking step by step and using tools to achieve a goal.
 
 You must always respond in this exact format:
 
 Thought: [write your thinking here — what do you know, what do you need, what should you do next]
-Action: [write only the tool name here — either: search, summarise, save_to_file, or finish]
+Action: [write only the tool name here — either: search, summarise, remember, save_to_file, or finish]
 Action Input: [write the input for the tool here]
 
 The tools available to you are:
 - search: use this to search the web for information. Action Input should be a search query.
-- summarise: use this to compress large amounts of text into clean bullet points. Action Input should be the text you want summarised.
+- summarise: use this to compress large amounts of text into clean bullet points. Action Input should be the actual text you want summarised — never a placeholder.
+- remember: use this to save important findings to memory for future use. Action Input should be the key findings you want to remember.
 - save_to_file: use this to save any important content to a file. Action Input should be the content you want saved.
 - finish: use this when you have enough information to answer the goal completely. Action Input should be your complete final answer.
 
 Rules:
 - Always think before acting
-- Always use search before anything else — gather information first
-- Use summarise when search results are too long or complex to work with directly
+- If memory context is provided at the start — read it carefully and use it
+- Only search for information that is missing from memory
+- Only plan ONE action at a time — never write multiple Action and Action Input pairs in one response
+- Always wait for the Observation before deciding the next action
+- When using summarise — always pass the actual text from the Observation, never a placeholder like [text from search]
+- Use remember to save important findings before finishing
 - Only use finish when you are genuinely satisfied with what you have found
-- Never make up information — only use what you find through search
+- Never make up information — only use what you find through search or memory
 - Never add a year to your search queries — always search without years so you get the most recent results
 - Always do at least two searches before finishing — never finish after just one search
 """
 
 
 def parse_llm_output(llm_output):
-    # This function reads the agent's response and extracts:
-    # 1. The action name — which tool to use
-    # 2. The action input — what to pass to the tool
-    # It handles multi-line inputs correctly
-
     action = None
     action_input = None
 
@@ -59,24 +60,46 @@ def parse_llm_output(llm_output):
 
 
 def run_agent(goal):
-    # This function is now a generator
-    # Instead of printing to the terminal it yields updates
-    # Each yield sends one piece of information to the Flask stream
-    # The webpage receives each update instantly as it happens
-    #
-    # Think of yield like a live reporter sending updates from the field
-    # Instead of waiting until the story is complete and sending it all at once
-    # He sends each update the moment it happens
-    # "Breaking news — Step 1 starting..."
-    # "Breaking news — Agent searched for X..."
-    # "Breaking news — Agent found these results..."
-
     yield f"GOAL: {goal}\n"
     yield "=" * 50 + "\n"
 
+    # Check memory before doing anything else
+    # This is the agent asking Meera — have you seen anything like this before?
+    memory_count = get_memory_count()
+    memory_context = ""
+
+    if memory_count > 0:
+        yield f"\nChecking memory... ({memory_count} memories stored)\n"
+        relevant_memories = search_memory(goal)
+
+        if relevant_memories:
+            memory_context = relevant_memories
+            yield f"\nFOUND RELEVANT MEMORY:\n{memory_context}\n"
+            yield "=" * 50 + "\n"
+        else:
+            yield "\nNo relevant memories found. Starting fresh research.\n"
+            yield "=" * 50 + "\n"
+    else:
+        yield "\nNo memories stored yet. Starting fresh research.\n"
+        yield "=" * 50 + "\n"
+
+    # Build the initial messages
+    # If we have memory context include it at the start
+    # So the agent knows what it already knows before deciding what to search for
+    if memory_context:
+        initial_user_message = f"""Your goal is: {goal}
+
+Here is relevant context from your memory of past research:
+
+{memory_context}
+
+Use this memory as a foundation. Only search for information that is missing or needs updating."""
+    else:
+        initial_user_message = f"Your goal is: {goal}"
+
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": f"Your goal is: {goal}"}
+        {"role": "user", "content": initial_user_message}
     ]
 
     max_steps = 10
@@ -90,8 +113,6 @@ def run_agent(goal):
         )
 
         llm_output = response.choices[0].message.content
-
-        # Send the agent's thought and action to the webpage
         yield llm_output + "\n"
 
         messages.append({"role": "assistant", "content": llm_output})
@@ -113,12 +134,12 @@ def run_agent(goal):
         if action in TOOLS:
             tool_function = TOOLS[action]
 
+            # If the agent is searching strip any years from the query
             if action == "search":
                 action_input = re.sub(r'\b(19|20)\d{2}\b', '', action_input).strip()
 
             observation = tool_function(action_input)
 
-            # Send the observation to the webpage
             yield f"\nOBSERVATION:\n{observation}\n"
 
             messages.append({
@@ -129,14 +150,13 @@ def run_agent(goal):
         else:
             messages.append({
                 "role": "user",
-                "content": f"Observation: Tool '{action}' does not exist. Please use only: search, summarise, save_to_file, or finish."
+                "content": f"Observation: Tool '{action}' does not exist. Please use only: search, summarise, remember, save_to_file, or finish."
             })
 
     else:
         yield "\nMax steps reached. Agent did not finish in time.\n"
 
 
-# This is kept for testing in the terminal if needed
 if __name__ == "__main__":
     goal = input("Enter your goal: ")
     for update in run_agent(goal):
