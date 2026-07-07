@@ -3,7 +3,7 @@ import re
 from openai import OpenAI
 from dotenv import load_dotenv
 from tools import TOOLS
-from memory import search_memory, get_memory_count
+from memory import search_memory, get_memory_count, save_to_memory
 
 load_dotenv()
 
@@ -124,6 +124,14 @@ Use this memory as a foundation. Only search for information that is missing or 
             break
 
         if action == "finish":
+            # Automatically save the final answer to memory before finishing
+            # This is enforced in code — not left to the agent's discretion
+            # Every single final answer gets remembered permanently
+            # Think of it as the hospital sanitiser dispenser —
+            # it happens automatically, nobody can forget
+            save_to_memory(goal, action_input)
+            yield "\nSaving to memory...\n"
+
             TOOLS["finish"](action_input)
             yield "\n" + "=" * 50 + "\n"
             yield "FINAL ANSWER:\n"
@@ -134,7 +142,6 @@ Use this memory as a foundation. Only search for information that is missing or 
         if action in TOOLS:
             tool_function = TOOLS[action]
 
-            # If the agent is searching strip any years from the query
             if action == "search":
                 action_input = re.sub(r'\b(19|20)\d{2}\b', '', action_input).strip()
 

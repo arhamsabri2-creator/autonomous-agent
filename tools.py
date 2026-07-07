@@ -3,6 +3,7 @@ import re
 from dotenv import load_dotenv
 from tavily import TavilyClient
 from openai import OpenAI
+from memory import save_to_memory, search_memory
 
 load_dotenv()
 
@@ -31,9 +32,6 @@ def search(query):
 
 
 def summarise(text):
-    # This tool takes a large block of text and compresses it
-    # Think of it as a junior assistant who reads everything
-    # and hands back only the most important points
     try:
         response = openai_client.chat.completions.create(
             model="gpt-4o",
@@ -54,10 +52,20 @@ def summarise(text):
         return f"Summarise failed with error: {str(e)}"
 
 
+def remember(content):
+    # This tool saves important findings to the agent's memory
+    # Think of it as Meera filing a new case in the warehouse
+    # The agent calls this when it has found something worth remembering
+    # Content should be the key findings the agent wants to save
+    try:
+        result = save_to_memory(content, content)
+        return f"Saved to memory: {result}"
+
+    except Exception as e:
+        return f"Remember failed with error: {str(e)}"
+
+
 def save_to_file(content):
-    # This tool saves the agent's final answer to a text file
-    # Think of it as the filing cabinet in Raza's office
-    # Every closed case gets a written record automatically
     try:
         filename = "output.txt"
         with open(filename, "w") as f:
@@ -69,8 +77,6 @@ def save_to_file(content):
 
 
 def finish(answer):
-    # Signal that the task is complete
-    # Also automatically saves the answer to a file
     save_to_file(answer)
     return answer
 
@@ -78,6 +84,7 @@ def finish(answer):
 TOOLS = {
     "search": search,
     "summarise": summarise,
+    "remember": remember,
     "save_to_file": save_to_file,
     "finish": finish,
 }
