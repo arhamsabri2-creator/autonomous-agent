@@ -1,72 +1,71 @@
 import os
-import chromadb
+import uuid
 from dotenv import load_dotenv
-from chromadb.utils import embedding_functions
+from pinecone import Pinecone
+from openai import OpenAI
 
-# Load environment variables first before anything else
-# This ensures OPENAI_API_KEY is available when creating the embedding function
 load_dotenv()
 
-client = chromadb.PersistentClient(path="./memory_store")
+pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+index = pc.Index("agent-memory")
 
-embedding_function = embedding_functions.OpenAIEmbeddingFunction(
-    api_key=os.getenv("OPENAI_API_KEY"),
-    model_name="text-embedding-3-small"
-)
+openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-collection = client.get_or_create_collection(
-    name="agent_memory",
-    embedding_function=embedding_function
-)
+
+def get_embedding(text):
+    response = openai_client.embeddings.create(
+        model="text-embedding-3-small",
+        input=text
+    )
+    return response.data[0].embedding
 
 
 def save_to_memory(goal, result):
-    # Saves a research run to memory
-    # Think of it as Meera filing a new case in the warehouse
     try:
-        memory_id = goal[:50].replace(" ", "_").replace("?", "").replace(",", "")
+        memory_id = str(uuid.uuid4())
         document = f"Goal: {goal}\n\nFindings: {result}"
+        embedding = get_embedding(document)
 
-        collection.upsert(
-            ids=[memory_id],
-            documents=[document],
-            metadatas=[{"goal": goal}]
-        )
+        index.upsert(vectors=[{
+            "id": memory_id,
+            "values": embedding,
+            "metadata": {"goal": goal, "text": document}
+        }])
 
         return f"Memory saved successfully for goal: {goal[:50]}"
-
     except Exception as e:
         return f"Memory save failed: {str(e)}"
 
 
 def search_memory(query, n_results=3):
-    # Searches memory for relevant past research
-    # Think of it as asking Meera — have you seen anything like this before?
     try:
-        if collection.count() == 0:
+        stats = index.describe_index_stats()
+        if stats["total_vector_count"] == 0:
             return None
 
-        results = collection.query(
-            query_texts=[query],
-            n_results=min(n_results, collection.count())
+        query_embedding = get_embedding(query)
+
+        results = index.query(
+            vector=query_embedding,
+            top_k=min(n_results, stats["total_vector_count"]),
+            include_metadata=True
         )
 
-        if not results["documents"][0]:
+        if not results["matches"]:
             return None
 
         output = "RELEVANT MEMORIES FROM PAST RESEARCH:\n\n"
-        for i, doc in enumerate(results["documents"][0], start=1):
-            output += f"Memory {i}:\n{doc}\n\n"
+        for i, match in enumerate(results["matches"], start=1):
+            output += f"Memory {i}:\n{match['metadata']['text']}\n\n"
 
         return output.strip()
-
-    except Exception as e:
+    except Exception:
         return None
 
 
 def get_memory_count():
-    # Returns how many memories are stored
     try:
-        return collection.count()
-    except:
+        stats = index.describe_index_stats()
+        return stats["total_vector_count"]
+    except Exception:
         return 0

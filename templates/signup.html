@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up — Autonomous Agent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #0f0f0f;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #00ff88;
+            margin-bottom: 8px;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 40px;
+            letter-spacing: 1px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        input {
+            width: 100%;
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 14px 18px;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            border-color: #00ff88;
+        }
+
+        button {
+            width: 100%;
+            background-color: #00ff88;
+            color: #0f0f0f;
+            border: none;
+            border-radius: 6px;
+            padding: 14px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            letter-spacing: 1px;
+            margin-top: 10px;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #00cc6a;
+        }
+
+        .error {
+            background-color: #2a1a1a;
+            border: 1px solid #ff4444;
+            border-radius: 6px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #ff4444;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background-color: #1a2a1a;
+            border: 1px solid #00ff88;
+            border-radius: 6px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #00ff88;
+            margin-bottom: 20px;
+        }
+
+        .plan-info {
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .plan-info span {
+            color: #00ff88;
+        }
+
+        .link {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .link a {
+            color: #00ff88;
+            text-decoration: none;
+        }
+
+        .link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AUTONOMOUS AGENT</h1>
+        <p class="subtitle">Create your free account</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="plan-info">
+            <span>FREE PLAN</span> — 3 research runs per day<br>
+            <span>PRO PLAN</span> — Unlimited runs + persistent memory
+        </div>
+
+        <form method="POST" action="/signup">
+            <div class="form-group">
+                <label>NAME</label>
+                <input type="text" name="name" placeholder="Your name" required />
+            </div>
+
+            <div class="form-group">
+                <label>EMAIL</label>
+                <input type="email" name="email" placeholder="your@email.com" required />
+            </div>
+
+            <div class="form-group">
+                <label>PASSWORD</label>
+                <input type="password" name="password" placeholder="••••••••" required />
+            </div>
+
+            <button type="submit">CREATE FREE ACCOUNT</button>
+        </form>
+
+        <div class="link">
+            Already have an account? <a href="/login">Login</a>
+        </div>
+    </div>
+</body>
+</html>
