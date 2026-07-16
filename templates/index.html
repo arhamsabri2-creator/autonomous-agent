@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous Agent</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #0f0f0f; color: #e0e0e0; font-family: 'Courier New', monospace; min-height: 100vh; padding: 40px 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
+        .header-left h1 { font-size: 24px; color: #00ff88; letter-spacing: 2px; }
+        .header-left .subtitle { font-size: 13px; color: #666; margin-top: 4px; }
+        .header-right { text-align: right; font-size: 12px; color: #666; line-height: 1.8; }
+        .user-name { color: #e0e0e0; font-size: 14px; margin-bottom: 2px; }
+        .plan-free { color: #ffaa00; }
+        .plan-pro { color: #00ff88; }
+        .header-right a { color: #00ff88; text-decoration: none; font-size: 12px; }
+        .upgrade-banner { background-color: #1a1a00; border: 1px solid #ffaa00; border-radius: 6px; padding: 14px 18px; margin-bottom: 24px; font-size: 13px; color: #ffaa00; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+        .upgrade-banner a { background-color:#ffaa00; color: #0f0f0f; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 12px; white-space: nowrap; }
+        #goalInput { width: 100%; background-color: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 14px 18px; color: #e0e0e0; font-family: 'Courier New', monospace; font-size: 14px; outline: none; margin-bottom: 12px; display: block; }
+        #goalInput:focus { border-color: #00ff88; }
+        #goalInput::placeholder { color: #444; }
+        #runButton { background-color: #00ff88; color: #0f0f0f; border: none; border-radius: 6px; padding: 14px 28px; font-family: 'Courier New', monospace; font-size: 14px; font-weight: bold; cursor: pointer; margin-bottom: 16px; }
+        #runButton:hover { background-color: #00cc6a; }
+        #runButton:disabled { background-color: #333; color: #666; cursor: not-allowed; }
+        .status { font-size: 12px; color: #666; margin-bottom: 10px; letter-spacing: 1px; }
+        .status.running { color: #ffaa00; }
+        .status.done { color: #00ff88; }
+        .output-box { background-color: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 24px; min-height: 400px; white-space: pre-wrap; font-size: 13px; line-height: 1.7; overflow-y: auto; max-height: 600px; }
+        .placeholder-text { color: #444; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>AUTONOMOUS AGENT</h1>
+                <p class="subtitle">ReAct — Reason + Act</p>
+            </div>
+            <div class="header-right">
+                <div class="user-name">{{ user.name }}</div>
+                {% if user.plan == 'pro' %}
+                    <div class="plan-pro">PRO — Unlimited</div>
+                {% else %}
+                    <div class="plan-free" id="run-counter-top">FREE — {{ user.runs_today }} / 3 runs used today</div>
+                {% endif %}
+                <div>
+                    <a href="/logout">Logout</a>
+                    {% if user.plan == 'free' %}
+                        &nbsp;·&nbsp;<a href="/upgrade">Upgrade</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% if user.plan == 'free' %}
+        <div class="upgrade-banner">
+            <span id="run-counter-banner">Free plan: {{ user.runs_today }}/3 runs used today. Upgrade for unlimited access.</span>
+            <a href="/upgrade">UPGRADE TO PRO</a>
+        </div>
+        {% endif %}
+        <input type="text" id="goalInput" placeholder="Enter your research goal..." />
+        <button id="runButton" onclick="runAgent()">RUN</button>
+        <div class="status" id="status"></div>
+        <div class="output-box" id="output">
+            <span class="placeholder-text">Agent output will appear here in real time...</span>
+        </div>
+    </div>
+    <script>
+        let pollInterval = null;
+        let runsUsed = {{ user.runs_today }};
+
+        function updateCounters() {
+            runsUsed += 1;
+            const top = document.getElementById("run-counter-top");
+            if (top) top.textContent = "FREE — " + runsUsed + " / 3 runs used today";
+            const banner = document.getElementById("run-counter-banner");
+            if (banner) banner.textContent = "Free plan: " + runsUsed + "/3 runs used today. Upgrade for unlimited access.";
+        }
+
+        function runAgent() {
+            const goal = document.getElementById("goalInput").value.trim();
+            if (!goal) { alert("Please enter a goal first."); return; }
+            document.getElementById("output").innerHTML = "";
+            document.getElementById("runButton").disabled = true;
+            document.getElementById("status").textContent = "RUNNING...";
+            document.getElementById("status").className = "status running";
+            const formData = new FormData();
+            formData.append("goal", goal);
+            fetch("/run", { method: "POST", body: formData })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById("output").innerHTML = data.error;
+                    document.getElementById("runButton").disabled = false;
+                    document.getElementById("status").textContent = "ERROR";
+                    return;
+                }
+                startPolling(data.job_id);
+            });
+        }
+
+        function startPolling(jobId) {
+            let cursor = 0;
+            const outputBox = document.getElementById("output");
+            pollInterval = setInterval(() => {
+                fetch(`/poll/${jobId}?cursor=${cursor}`)
+                .then(r => r.json())
+                .then(data => {
+                    data.lines.forEach(line => {
+                        outputBox.innerHTML += line;
+                        outputBox.scrollTop = outputBox.scrollHeight;
+                    });
+                    cursor = data.cursor;
+                    if (data.status === "done") {
+                        clearInterval(pollInterval);
+                        document.getElementById("runButton").disabled = false;
+                        document.getElementById("status").textContent = "DONE";
+                        document.getElementById("status").className = "status done";
+                        updateCounters();
+                    }
+                });
+            }, 2000);
+        }
+
+        document.getElementById("goalInput").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") { runAgent(); }
+        });
+    </script>
+</body>
+</html>
