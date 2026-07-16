@@ -6,3 +6,5 @@ stripe
 pinecone
 flask-login
 psycopg2-binary
+playwright
+pdfplumber
