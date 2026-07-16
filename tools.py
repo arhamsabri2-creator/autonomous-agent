@@ -5,6 +5,7 @@ from tavily import TavilyClient
 from openai import OpenAI
 from memory import save_to_memory, search_memory
 from court_tool import check_court_cause_list
+from research_tool import deep_research
 
 load_dotenv()
 
@@ -54,10 +55,6 @@ def summarise(text):
 
 
 def remember(content):
-    # This tool saves important findings to the agent's memory
-    # Think of it as Meera filing a new case in the warehouse
-    # The agent calls this when it has found something worth remembering
-    # Content should be the key findings the agent wants to save
     try:
         result = save_to_memory(content, content)
         return f"Saved to memory: {result}"
@@ -88,5 +85,6 @@ TOOLS = {
     "remember": remember,
     "save_to_file": save_to_file,
     "check_court_cause_list": check_court_cause_list,
+    "deep_research": deep_research,
     "finish": finish,
 }

@@ -14,15 +14,16 @@ SYSTEM_PROMPT = """You are a reasoning agent with memory. You work by thinking s
 You must always respond in this exact format:
 
 Thought: [write your thinking here — what do you know, what do you need, what should you do next]
-Action: [write only the tool name here — either: search, summarise, remember, save_to_file, check_court_cause_list, or finish]
+Action: [write only the tool name here — either: search, summarise, remember, save_to_file, check_court_cause_list, deep_research, or finish]
 Action Input: [write the input for the tool here]
 
 The tools available to you are:
-- search: use this to search the web for information. Action Input should be a search query.
+- search: use this for quick lookups, simple facts, or when you only need a short snippet of information. Action Input should be a search query.
 - summarise: use this to compress large amounts of text into clean bullet points. Action Input should be the actual text you want summarised — never a placeholder.
 - remember: use this to save important findings to memory for future use. Action Input should be the key findings you want to remember.
 - save_to_file: use this to save any important content to a file. Action Input should be the content you want saved.
 - check_court_cause_list: use this to check today's Delhi High Court cause list for hearings, case listings, or judgments. Action Input can be left empty or contain a specific case name/number you're looking for.
+- deep_research: use this when the goal explicitly asks for deep, comprehensive, thorough, or in-depth research on a topic, or when short search snippets would not be enough to properly answer the goal. This reads the full content of top web pages, not just short previews. Prefer this over multiple rounds of search when the goal needs real depth. Action Input should be the research topic.
 - finish: use this when you have enough information to answer the goal completely. Action Input should be your complete final answer.
 
 Rules:
@@ -34,9 +35,10 @@ Rules:
 - When using summarise — always pass the actual text from the Observation, never a placeholder like [text from search]
 - Use remember to save important findings before finishing
 - Only use finish when you are genuinely satisfied with what you have found
-- Never make up information — only use what you find through search or memory
+- Never make up information — only use what you find through search, deep_research, or memory
 - Never add a year to your search queries — always search without years so you get the most recent results
-- Always do at least two searches before finishing — never finish after just one search
+- If the goal asks for deep, comprehensive, or thorough research, use deep_research instead of doing multiple rounds of search
+- If using search instead of deep_research, do at least two searches before finishing
 """
 
 
@@ -148,7 +150,7 @@ Use this memory as a foundation. Only search for information that is missing or 
         else:
             messages.append({
                 "role": "user",
-                "content": f"Observation: Tool '{action}' does not exist. Please use only: search, summarise, remember, save_to_file, check_court_cause_list, or finish."
+                "content": f"Observation: Tool '{action}' does not exist. Please use only: search, summarise, remember, save_to_file, check_court_cause_list, deep_research, or finish."
             })
 
     else:
