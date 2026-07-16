@@ -1,5 +1,6 @@
 FROM python:3.11-slim
 
+# Force rebuild - cache bust v2
 WORKDIR /app
 
 COPY requirements.txt .
