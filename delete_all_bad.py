@@ -7,9 +7,8 @@ pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 index = pc.Index("agent-memory")
 
 bad_ids = [
-    "191ac536-b699-4e94-975e-733bb115c136",
-    "1f77cbb4-9ce2-4fe1-92b9-c4716762d1d5",
-    "6d393e83-1037-4e5e-bc8d-c40e4ca491e5"
+    "d3358bf4-a224-4c76-aeed-3db25131ce87",
+    "548bf37d-66f5-45b3-b572-ef28972e738c"
 ]
 
 index.delete(ids=bad_ids)
