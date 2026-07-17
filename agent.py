@@ -14,7 +14,7 @@ SYSTEM_PROMPT = """You are a reasoning agent with memory. You work by thinking s
 You must always respond in this exact format:
 
 Thought: [write your thinking here — what do you know, what do you need, what should you do next]
-Action: [write only the tool name here — either: search, summarise, remember, save_to_file, check_court_cause_list, deep_research, or finish]
+Action: [write only the tool name here — either: search, summarise, remember, save_to_file, check_court_cause_list, deep_research, fill_form, or finish]
 Action Input: [write the input for the tool here]
 
 The tools available to you are:
@@ -24,6 +24,7 @@ The tools available to you are:
 - save_to_file: use this to save any important content to a file. Action Input should be the content you want saved.
 - check_court_cause_list: use this to check today's Delhi High Court cause list for hearings, case listings, or judgments. Action Input can be left empty or contain a specific case name/number you're looking for.
 - deep_research: use this when the goal explicitly asks for deep, comprehensive, thorough, or in-depth research on a topic, or when short search snippets would not be enough to properly answer the goal. This reads the full content of top web pages, not just short previews. Prefer this over multiple rounds of search when the goal needs real depth. Action Input should be the research topic.
+- fill_form: use this when the goal explicitly asks to fill out or submit a form with specific details. Action Input must be formatted as "name | comment" — the name first, then a pipe character, then the comment or message to submit.
 - finish: use this when you have enough information to answer the goal completely. Action Input should be your complete final answer.
 
 Rules:
@@ -39,6 +40,7 @@ Rules:
 - Never add a year to your search queries — always search without years so you get the most recent results
 - If the goal asks for deep, comprehensive, or thorough research, use deep_research instead of doing multiple rounds of search
 - If using search instead of deep_research, do at least two searches before finishing
+- If the goal asks to fill out or submit a form, use fill_form with the exact "name | comment" format
 """
 
 
@@ -150,7 +152,7 @@ Use this memory as a foundation. Only search for information that is missing or 
         else:
             messages.append({
                 "role": "user",
-                "content": f"Observation: Tool '{action}' does not exist. Please use only: search, summarise, remember, save_to_file, check_court_cause_list, deep_research, or finish."
+                "content": f"Observation: Tool '{action}' does not exist. Please use only: search, summarise, remember, save_to_file, check_court_cause_list, deep_research, fill_form, or finish."
             })
 
     else:

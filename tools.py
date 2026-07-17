@@ -6,6 +6,7 @@ from openai import OpenAI
 from memory import save_to_memory, search_memory
 from court_tool import check_court_cause_list
 from research_tool import deep_research
+from form_tool import fill_government_form
 
 load_dotenv()
 
@@ -86,5 +87,6 @@ TOOLS = {
     "save_to_file": save_to_file,
     "check_court_cause_list": check_court_cause_list,
     "deep_research": deep_research,
+    "fill_form": fill_government_form,
     "finish": finish,
 }
