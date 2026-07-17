@@ -22,13 +22,23 @@ def apply_to_internship(link):
             page.goto(link)
             page.wait_for_timeout(3000)
 
+            # Dismiss any modal that might be blocking
+            try:
+                close_btn = page.query_selector(".close-button, .modal-close, button[aria-label='Close'], .ic-16-cross")
+                if close_btn:
+                    close_btn.click()
+                    page.wait_for_timeout(1000)
+            except Exception:
+                pass
+
+            # Try JavaScript click to bypass overlay
             apply_btn = page.query_selector("button:has-text('Apply now')")
 
             if not apply_btn:
                 browser.close()
                 return "Apply button not found on page: " + link
 
-            apply_btn.click()
+            page.evaluate("btn => btn.click()", apply_btn)
             page.wait_for_timeout(3000)
 
             current_url = page.url
@@ -36,7 +46,7 @@ def apply_to_internship(link):
 
             if "already applied" in page_text.lower():
                 result = "Already applied to this internship"
-            elif "application" in page_text.lower() or "submitted" in page_text.lower():
+            elif "application" in page_text.lower() or "submitted" in page_text.lower() or "thank" in page_text.lower():
                 result = "Application submitted successfully"
             else:
                 result = "Clicked Apply now - current page: " + current_url
