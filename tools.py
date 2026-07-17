@@ -1,3 +1,5 @@
+from internshala_search import search_internshala_jobs
+from internshala_apply import apply_to_internship
 import os
 import re
 from dotenv import load_dotenv
@@ -82,6 +84,14 @@ def finish(answer):
     return answer
 
 
+
+def search_internshala(action_input):
+    return search_internshala_jobs()
+
+def apply_internshala(link):
+    link = link.strip().strip('"').strip("'")
+    return apply_to_internship(link)
+
 TOOLS = {
     "search": search,
     "summarise": summarise,
@@ -93,4 +103,6 @@ TOOLS = {
     "evaluate_job": evaluate_job,
     "fill_test_login": fill_test_login,
     "finish": finish,
+    "search_internshala": search_internshala,
+    "apply_internshala": apply_internshala,
 }

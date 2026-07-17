@@ -14,7 +14,7 @@ SYSTEM_PROMPT = """You are a reasoning agent with memory. You work by thinking s
 You must always respond in this exact format:
 
 Thought: [write your thinking here — what do you know, what do you need, what should you do next]
-Action: [write only the tool name here — either: search, summarise, remember, save_to_file, check_court_cause_list, deep_research, fill_form, evaluate_job, fill_test_login, or finish]
+Action: [write only the tool name here — either: search, summarise, remember, save_to_file, check_court_cause_list, deep_research, fill_form, evaluate_job, fill_test_login, search_internshala, apply_internshala, or finish]
 Action Input: [write the input for the tool here]
 
 The tools available to you are:
@@ -27,6 +27,8 @@ The tools available to you are:
 - fill_form: use this when the goal explicitly asks to fill out or submit a form with specific details. Action Input must be formatted as "name | comment" — the name first, then a pipe character, then the comment or message to submit.
 - evaluate_job: use this when the goal involves checking whether a job posting is worth applying to. This checks the posting against your skills, checks if you've already applied, and logs new matches. Action Input must be formatted as "company | job title | posting text" — three parts separated by pipe characters. If the result says PROCEED, you may then use fill_form to actually submit the application. If it says SKIP, do not apply — move to the next job or finish.
 - fill_test_login: use this when the goal explicitly asks to log into or test the practice login page. Action Input must be formatted as "username | password". If no credentials are given, defaults to the site's own test credentials.
+- search_internshala: use this to search for AI remote internships on Internshala. No Action Input needed — just call it and it returns a list of matching internships with title, company, stipend, and link.
+- apply_internshala: use this to apply to a specific internship on Internshala. Action Input must be the full internship link from search_internshala results.
 - finish: use this when you have enough information to answer the goal completely. Action Input should be your complete final answer.
 
 Rules:
@@ -155,7 +157,7 @@ Use this memory as a foundation. Only search for information that is missing or 
         else:
             messages.append({
                 "role": "user",
-                "content": f"Observation: Tool '{action}' does not exist. Please use only: search, summarise, remember, save_to_file, check_court_cause_list, deep_research, fill_form, evaluate_job, fill_test_login, or finish."
+                "content": f"Observation: Tool '{action}' does not exist. Please use only: search, summarise, remember, save_to_file, check_court_cause_list, deep_research, fill_form, evaluate_job, fill_test_login, search_internshala, apply_internshala, or finish."
             })
 
     else:
