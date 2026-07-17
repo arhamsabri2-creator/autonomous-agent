@@ -4,6 +4,7 @@ import threading
 from flask import Flask, request, Response, render_template, redirect, url_for, flash, jsonify
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from dotenv import load_dotenv
+from werkzeug.middleware.proxy_fix import ProxyFix
 import stripe
 from database import create_user, get_user_by_email, get_user_by_id, verify_password, check_and_update_usage, upgrade_to_pro
 from agent import run_agent
@@ -11,7 +12,11 @@ from agent import run_agent
 load_dotenv()
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.secret_key = os.getenv("SECRET_KEY", "your-secret-key-change-this")
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_HTTPONLY'] = True
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_PRICE_ID = os.getenv("STRIPE_PRICE_ID")
