@@ -8,6 +8,7 @@ from court_tool import check_court_cause_list
 from research_tool import deep_research
 from form_tool import fill_government_form
 from job_evaluator import evaluate_job
+from form_tool_2 import fill_test_login
 
 load_dotenv()
 
@@ -90,5 +91,6 @@ TOOLS = {
     "deep_research": deep_research,
     "fill_form": fill_government_form,
     "evaluate_job": evaluate_job,
+    "fill_test_login": fill_test_login,
     "finish": finish,
 }

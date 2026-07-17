@@ -7,9 +7,9 @@ def evaluate_job(details):
     if len(parts) < 3:
         return "Error: input must be 'company | title | posting_text'"
 
-    company = parts[0].strip()
-    title = parts[1].strip()
-    posting_text = parts[2].strip()
+    company = parts[0].strip().strip('"').strip("'")
+    title = parts[1].strip().strip('"').strip("'")
+    posting_text = parts[2].strip().strip('"').strip("'")
 
     if not is_match(posting_text):
         return f"SKIP - not a skills match: {company} - {title}"
