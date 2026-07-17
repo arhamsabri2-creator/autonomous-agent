@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=".env")
 
+IS_HF = os.getenv("SPACE_ID") is not None
+
 AI_KEYWORDS = [
     "machine learning", "artificial intelligence", "ai ", " ai",
     "data science", "nlp", "deep learning", "python",
@@ -23,28 +25,14 @@ def search_internshala_jobs():
 
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(
-                headless=True,
-                args=[
-                    "--disable-blink-features=AutomationControlled",
-                    "--no-sandbox",
-                    "--disable-dev-shm-usage",
-                    "--disable-gpu"
-                ]
-            )
-            context = browser.new_context(
-                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                viewport={"width": 1280, "height": 800}
-            )
-            page = context.new_page()
-            page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+            browser = p.chromium.launch(headless=IS_HF)
+            page = browser.new_page()
 
             page.goto("https://internshala.com/login/user")
-            page.wait_for_timeout(2000)
             page.fill("#email", email)
             page.fill("#password", password)
             page.click("#login_submit")
-            page.wait_for_timeout(6000)
+            page.wait_for_timeout(5000)
 
             page.goto("https://internshala.com/internships/artificial-intelligence-internship/work-from-home-jobs/")
             page.wait_for_timeout(4000)
@@ -66,12 +54,7 @@ def search_internshala_jobs():
                     if not is_ai_related(title):
                         continue
 
-                    results.append({
-                        "title": title,
-                        "company": company,
-                        "stipend": stipend,
-                        "link": link
-                    })
+                    results.append({"title": title, "company": company, "stipend": stipend, "link": link})
                 except Exception:
                     continue
 
