@@ -17,12 +17,21 @@ def apply_to_internship(link):
             page.fill("#email", email)
             page.fill("#password", password)
             page.click("#login_submit")
-            page.wait_for_timeout(3000)
+            page.wait_for_timeout(5000)
+
+            current_url = page.url
+            if "login" in current_url:
+                browser.close()
+                return "Login failed - still on login page"
 
             page.goto(link)
-            page.wait_for_timeout(3000)
+            page.wait_for_timeout(5000)
 
-            # Dismiss any modal that might be blocking
+            current_url = page.url
+            if "registration" in current_url or "login" in current_url:
+                browser.close()
+                return "Session lost after navigation - not logged in"
+
             try:
                 close_btn = page.query_selector(".close-button, .modal-close, button[aria-label='Close'], .ic-16-cross")
                 if close_btn:
@@ -31,7 +40,6 @@ def apply_to_internship(link):
             except Exception:
                 pass
 
-            # Try JavaScript click to bypass overlay
             apply_btn = page.query_selector("button:has-text('Apply now')")
 
             if not apply_btn:
@@ -39,9 +47,8 @@ def apply_to_internship(link):
                 return "Apply button not found on page: " + link
 
             page.evaluate("btn => btn.click()", apply_btn)
-            page.wait_for_timeout(3000)
+            page.wait_for_timeout(4000)
 
-            current_url = page.url
             page_text = page.inner_text("body")
 
             if "already applied" in page_text.lower():
@@ -49,7 +56,7 @@ def apply_to_internship(link):
             elif "application" in page_text.lower() or "submitted" in page_text.lower() or "thank" in page_text.lower():
                 result = "Application submitted successfully"
             else:
-                result = "Clicked Apply now - current page: " + current_url
+                result = "Clicked Apply now - current page: " + page.url
 
             browser.close()
             return result
