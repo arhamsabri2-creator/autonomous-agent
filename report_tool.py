@@ -1,6 +1,7 @@
 import os
 import csv
 from datetime import datetime
+from gmail_tool import send_email
 
 def save_daily_report(applications=None):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -36,4 +37,14 @@ def save_daily_report(applications=None):
     with open("daily_report.txt", "a") as f:
         f.write(report + "\n\n")
 
-    return "Report saved to daily_report.txt — " + str(len(todays_applications)) + " total applications logged"
+    try:
+        send_email(
+            to="arhamsabri2@gmail.com",
+            subject="Daily Job Report - " + today,
+            body=report
+        )
+        email_status = "Email sent successfully"
+    except Exception as e:
+        email_status = "Email failed: " + str(e)
+
+    return "Report saved to daily_report.txt — " + str(len(todays_applications)) + " total applications logged. " + email_status

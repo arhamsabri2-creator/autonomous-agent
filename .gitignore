@@ -5,3 +5,5 @@ output.txt
 users.db
 memory_store/
 cause_lists/
+gmail_credentials.json
+gmail_token.json
