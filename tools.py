@@ -1,3 +1,4 @@
+from report_tool import save_daily_report
 from internshala_search import search_internshala_jobs
 from internshala_apply import apply_to_internship
 import os
@@ -89,6 +90,9 @@ def search_internshala(action_input):
     topic = action_input.strip().strip('"').strip("'") if action_input and action_input != 'None' else 'artificial-intelligence'
     return search_internshala_jobs(topic)
 
+def save_report(action_input):
+    return save_daily_report([])
+
 def apply_internshala(link):
     link = link.strip().strip('"').strip("'")
     return apply_to_internship(link)
@@ -106,4 +110,5 @@ TOOLS = {
     "finish": finish,
     "search_internshala": search_internshala,
     "apply_internshala": apply_internshala,
+    "save_report": save_report,
 }

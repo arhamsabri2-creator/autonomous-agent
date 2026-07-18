@@ -29,6 +29,7 @@ The tools available to you are:
 - fill_test_login: use this when the goal explicitly asks to log into or test the practice login page. Action Input must be formatted as "username | password". If no credentials are given, defaults to the site's own test credentials.
 - search_internshala: use this to search for remote internships on Internshala on any topic. Action Input should be the topic you want to search for, r example: artificial-intelligence, python, data-science, law, finance. Returns a list of matching internships with title, company, stipend, and link.
 - apply_internshala: use this to apply to a specific internship on Internshala. Action Input must be the full internship link from search_internshala results.
+- save_report: use this at the end of every Internshala run to save a summary of what was done. No Action Input needed.
 - finish: use this when you have enough information to answer the goal completely. Action Input should be your complete final answer.
 
 Rules:
