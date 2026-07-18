@@ -46,6 +46,8 @@ Rules:
 - If using search instead of deep_research, do at least two searches before finishing
 - If the goal asks to fill out or submit a form, use fill_form with the exact "name | comment" format
 - If the goal asks to find and apply to jobs, first use search or deep_research to find postings, then use evaluate_job on each posting before applying, and only use fill_form if evaluate_job says PROCEED
+- If the goal says apply to N jobs on Internshala, use search_internshala to get the list, then call apply_internshala once for each result until you have applied to N jobs total — do not stop after the first application, keep looping through the list
+- Before calling apply_internshala on any link, check applied_jobs.csv in your memory to avoid applying to the same job twice
 """
 
 
