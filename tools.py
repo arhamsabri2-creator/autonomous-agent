@@ -86,7 +86,8 @@ def finish(answer):
 
 
 def search_internshala(action_input):
-    return search_internshala_jobs()
+    topic = action_input.strip().strip('"').strip("'") if action_input and action_input != 'None' else 'artificial-intelligence'
+    return search_internshala_jobs(topic)
 
 def apply_internshala(link):
     link = link.strip().strip('"').strip("'")

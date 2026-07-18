@@ -6,22 +6,12 @@ load_dotenv(dotenv_path=".env")
 
 IS_HF = os.getenv("SPACE_ID") is not None
 
-AI_KEYWORDS = [
-    "machine learning", "artificial intelligence", "ai ", " ai",
-    "data science", "nlp", "deep learning", "python",
-    "data analytics", "llm", "generative"
-]
-
-def is_ai_related(title):
-    title_lower = title.lower()
-    for keyword in AI_KEYWORDS:
-        if keyword in title_lower:
-            return True
-    return False
-
-def search_internshala_jobs():
+def search_internshala_jobs(topic="artificial-intelligence"):
     email = os.getenv("INTERNSHALA_EMAIL")
     password = os.getenv("INTERNSHALA_PASSWORD")
+
+    topic_slug = topic.lower().strip().replace(" ", "-")
+    url = "https://internshala.com/internships/keywords-" + topic_slug + "/work-from-home-jobs/"
 
     try:
         with sync_playwright() as p:
@@ -34,7 +24,7 @@ def search_internshala_jobs():
             page.click("#login_submit")
             page.wait_for_timeout(5000)
 
-            page.goto("https://internshala.com/internships/artificial-intelligence-internship/work-from-home-jobs/")
+            page.goto(url)
             page.wait_for_timeout(4000)
 
             cards = page.query_selector_all(".individual_internship")
@@ -51,9 +41,6 @@ def search_internshala_jobs():
                     stipend = stipend_el.inner_text().strip() if stipend_el else "N/A"
                     link = "https://internshala.com" + title_el.get_attribute("href") if title_el else "N/A"
 
-                    if not is_ai_related(title):
-                        continue
-
                     results.append({"title": title, "company": company, "stipend": stipend, "link": link})
                 except Exception:
                     continue
@@ -61,7 +48,7 @@ def search_internshala_jobs():
             browser.close()
 
             if len(results) == 0:
-                return "No AI-related internships found"
+                return "No internships found for topic: " + topic
 
             return results
 
