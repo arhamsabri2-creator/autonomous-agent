@@ -14,7 +14,7 @@ SYSTEM_PROMPT = """You are a reasoning agent with memory. You work by thinking s
 You must always respond in this exact format:
 
 Thought: [write your thinking here — what do you know, what do you need, what should you do next]
-Action: [write only the tool name here — either: search, summarise, remember, save_to_file, check_court_cause_list, deep_research, fill_form, evaluate_job, fill_test_login, search_internshala, apply_internshala, or finish]
+Action: [write only the tool name here — either: search, summarise, remember, save_to_file, check_court_cause_list, deep_research, fill_form, evaluate_job, fill_test_login, search_internshala, apply_internshala, save_report, get_calendar, create_calendar_event, or finish]
 Action Input: [write the input for the tool here]
 
 The tools available to you are:
@@ -27,9 +27,11 @@ The tools available to you are:
 - fill_form: use this when the goal explicitly asks to fill out or submit a form with specific details. Action Input must be formatted as "name | comment" — the name first, then a pipe character, then the comment or message to submit.
 - evaluate_job: use this when the goal involves checking whether a job posting is worth applying to. This checks the posting against your skills, checks if you've already applied, and logs new matches. Action Input must be formatted as "company | job title | posting text" — three parts separated by pipe characters. If the result says PROCEED, you may then use fill_form to actually submit the application. If it says SKIP, do not apply — move to the next job or finish.
 - fill_test_login: use this when the goal explicitly asks to log into or test the practice login page. Action Input must be formatted as "username | password". If no credentials are given, defaults to the site's own test credentials.
-- search_internshala: use this to search for remote internships on Internshala on any topic. Action Input should be the topic you want to search for, r example: artificial-intelligence, python, data-science, law, finance. Returns a list of matching internships with title, company, stipend, and link.
+- search_internshala: use this to search for remote internships on Internshala on any topic. Action Input should be the topic you want to search for, for example: artificial-intelligence, python, data-science, law, finance. Returns a list of matching internships with title, company, stipend, and link.
 - apply_internshala: use this to apply to a specific internship on Internshala. Action Input must be the full internship link from search_internshala results.
 - save_report: use this at the end of every Internshala run to save a summary of what was done. No Action Input needed.
+- get_calendar: use this to get today's calendar events. No Action Input needed — just use get_calendar with no input.
+- create_calendar_event: use this to create a new calendar event. Action Input must be formatted as "title | date | time" for example "Study Session | 2026-07-20 | 15:00".
 - finish: use this when you have enough information to answer the goal completely. Action Input should be your complete final answer.
 
 Rules:
@@ -49,6 +51,8 @@ Rules:
 - If the goal asks to find and apply to jobs, first use search or deep_research to find postings, then use evaluate_job on each posting before applying, and only use fill_form if evaluate_job says PROCEED
 - If the goal says apply to N jobs on Internshala, use search_internshala to get the list, then call apply_internshala once for each result until you have applied to N jobs total — do not stop after the first application, keep looping through the list
 - Before calling apply_internshala on any link, check applied_jobs.csv in your memory to avoid applying to the same job twice
+- If the goal asks about calendar or schedule, use get_calendar to read today's events
+- If the goal asks to schedule or create an event, use create_calendar_event with the format "title | date | time"
 """
 
 
@@ -160,7 +164,7 @@ Use this memory as a foundation. Only search for information that is missing or 
         else:
             messages.append({
                 "role": "user",
-                "content": f"Observation: Tool '{action}' does not exist. Please use only: search, summarise, remember, save_to_file, check_court_cause_list, deep_research, fill_form, evaluate_job, fill_test_login, search_internshala, apply_internshala, or finish."
+                "content": f"Observation: Tool '{action}' does not exist. Please use only: search, summarise, remember, save_to_file, check_court_cause_list, deep_research, fill_form, evaluate_job, fill_test_login, search_internshala, apply_internshala, save_report, get_calendar, create_calendar_event, or finish."
             })
 
     else:

@@ -1,6 +1,7 @@
 from report_tool import save_daily_report
 from internshala_search import search_internshala_jobs
 from internshala_apply import apply_to_internship
+from calendar_tool import get_todays_events, create_event
 import os
 import re
 from dotenv import load_dotenv
@@ -18,26 +19,20 @@ load_dotenv()
 tavily_client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-
 def search(query):
     try:
         response = tavily_client.search(query=query, max_results=5, days=365)
         results = response.get("results", [])
-
         if not results:
             return "No results found for this search query."
-
         output = ""
         for i, result in enumerate(results, start=1):
             title = result.get("title", "No title")
             content = result.get("content", "No content")
             output += f"Result {i}:\nTitle: {title}\nContent: {content}\n\n"
-
         return output.strip()
-
     except Exception as e:
         return f"Search failed with error: {str(e)}"
-
 
 def summarise(text):
     try:
@@ -55,19 +50,15 @@ def summarise(text):
             ]
         )
         return response.choices[0].message.content
-
     except Exception as e:
         return f"Summarise failed with error: {str(e)}"
-
 
 def remember(content):
     try:
         result = save_to_memory(content, content)
         return f"Saved to memory: {result}"
-
     except Exception as e:
         return f"Remember failed with error: {str(e)}"
-
 
 def save_to_file(content):
     try:
@@ -75,16 +66,12 @@ def save_to_file(content):
         with open(filename, "w") as f:
             f.write(content)
         return f"Answer saved to {filename}"
-
     except Exception as e:
         return f"Save failed with error: {str(e)}"
-
 
 def finish(answer):
     save_to_file(answer)
     return answer
-
-
 
 def search_internshala(action_input):
     topic = action_input.strip().strip('"').strip("'") if action_input and action_input != 'None' else 'artificial-intelligence'
@@ -96,6 +83,21 @@ def save_report(action_input):
 def apply_internshala(link):
     link = link.strip().strip('"').strip("'")
     return apply_to_internship(link)
+
+def get_calendar(action_input):
+    return get_todays_events()
+
+def create_calendar(action_input):
+    try:
+        parts = [p.strip() for p in action_input.split("|")]
+        if len(parts) < 3:
+            return "Error: Action Input must be formatted as title | date | time"
+        title = parts[0]
+        date = parts[1]
+        time = parts[2]
+        return create_event(title, date, time)
+    except Exception as e:
+        return f"Calendar event creation failed: {str(e)}"
 
 TOOLS = {
     "search": search,
@@ -111,4 +113,6 @@ TOOLS = {
     "search_internshala": search_internshala,
     "apply_internshala": apply_internshala,
     "save_report": save_report,
+    "get_calendar": get_calendar,
+    "create_calendar_event": create_calendar,
 }

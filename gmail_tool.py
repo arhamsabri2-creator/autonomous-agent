@@ -8,7 +8,8 @@ from email.mime.text import MIMEText
 
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.send",
-    "https://www.googleapis.com/auth/spreadsheets"
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/calendar"
 ]
 CREDS_FILE = "gmail_credentials.json"
 TOKEN_FILE = "gmail_token.json"
