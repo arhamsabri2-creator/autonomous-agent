@@ -1,6 +1,3 @@
-company,title
-"""Turing",Senior Python Developer
-Qubixo,Python Development
-NayePankh Foundation,Python Development
-Basti Ki Pathshala Foundation,Python Development
-Queens Of Change Foundation,Python Development
+title,company,link,date,status
+Optimasys,Python Development
+CloudZapier,Python Development

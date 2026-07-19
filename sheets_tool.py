@@ -2,9 +2,8 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
-import base64
 import os
-from email.mime.text import MIMEText
+from datetime import datetime
 
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.send",
@@ -12,8 +11,9 @@ SCOPES = [
 ]
 CREDS_FILE = "gmail_credentials.json"
 TOKEN_FILE = "gmail_token.json"
+SHEET_ID = "1YkIXvLjGW6S6GBM_pZHqaqmnTHFDuiOyEyCieGo_i5c"
 
-def get_gmail_service():
+def get_sheets_service():
     creds = None
     if os.path.exists(TOKEN_FILE):
         creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
@@ -25,22 +25,28 @@ def get_gmail_service():
             creds = flow.run_local_server(port=0)
         with open(TOKEN_FILE, "w") as token:
             token.write(creds.to_json())
-    service = build("gmail", "v1", credentials=creds)
+    service = build("sheets", "v4", credentials=creds)
     return service
 
-def send_email(to, subject, body):
-    service = get_gmail_service()
-    message = MIMEText(body)
-    message["to"] = to
-    message["subject"] = subject
-    raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
-    result = service.users().messages().send(userId="me", body={"raw": raw}).execute()
-    print(f"Email sent! Message ID: {result['id']}")
+def log_job_to_sheet(title, company, platform, link, status="Applied"):
+    service = get_sheets_service()
+    date = datetime.now().strftime("%Y-%m-%d %H:%M")
+    values = [[date, title, company, platform, link, status]]
+    body = {"values": values}
+    result = service.spreadsheets().values().append(
+        spreadsheetId=SHEET_ID,
+        range="Sheet1!A:F",
+        valueInputOption="RAW",
+        body=body
+    ).execute()
+    print(f"Job logged to sheet: {title} at {company}")
     return result
 
 if __name__ == "__main__":
-    send_email(
-        to="arhamsabri2@gmail.com",
-        subject="Test from Autonomous Agent",
-        body="Hello Arham! Your autonomous agent just sent you this email. Gmail integration is working!"
+    log_job_to_sheet(
+        title="Test Python Internship",
+        company="Test Company",
+        platform="Internshala",
+        link="https://internshala.com/test",
+        status="Applied"
     )
