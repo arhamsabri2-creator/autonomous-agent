@@ -1,0 +1,7 @@
+flask
+openai
+tavily-python
+python-dotenv
+stripe
+pinecone
+flask-login

@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+output.txt
+users.db
+memory_store/
+gmail_credentials.json
+gmail_token.json
