@@ -22,6 +22,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from database import create_user, get_user_by_email, get_user_by_id, verify_password, check_and_update_usage, upgrade_to_pro, get_db, get_all_users, log_agent_run
 from agent import run_agent
+from authlib.integrations.flask_client import OAuth
 
 load_dotenv()
 
@@ -33,6 +34,15 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id=os.getenv('GOOGLE_CLIENT_ID'),
+    client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'}
+)
 app.secret_key = os.getenv("SECRET_KEY", "your-secret-key-change-this")
 
 app.config['SESSION_COOKIE_SECURE'] = False
@@ -368,6 +378,36 @@ Arham's Autonomous Agent
             flash(message, "error")
             return render_template("signup.html")
     return render_template("signup.html")
+
+@app.route("/auth/google")
+def google_login():
+    redirect_uri = url_for("google_callback", _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+@app.route("/auth/google/callback")
+def google_callback():
+    try:
+        token = google.authorize_access_token()
+        user_info = token.get("userinfo")
+        if not user_info:
+            flash("Google login failed", "error")
+            return redirect(url_for("login"))
+        email = user_info["email"]
+        name = user_info.get("name", email.split("@")[0])
+        user = get_user_by_email(email)
+        if not user:
+            create_user(name, email, uuid.uuid4().hex)
+            user = get_user_by_email(email)
+        if not user:
+            flash("Google login failed - could not create account", "error")
+            return redirect(url_for("login"))
+        login_user(User(user))
+        logger.info(f"Google login: {email}")
+        return redirect(url_for("index"))
+    except Exception as e:
+        logger.error(f"Google callback error: {e}")
+        flash("Google login failed", "error")
+        return redirect(url_for("login"))
 
 @app.route("/login", methods=["GET", "POST"])
 @limiter.limit("5 per minute")
