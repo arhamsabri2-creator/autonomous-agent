@@ -18,18 +18,65 @@
         .header-right a { color: #00ff88; text-decoration: none; font-size: 12px; }
         .upgrade-banner { background-color: #1a1a00; border: 1px solid #ffaa00; border-radius: 6px; padding: 14px 18px; margin-bottom: 24px; font-size: 13px; color: #ffaa00; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
         .upgrade-banner a { background-color: #ffaa00; color: #0f0f0f; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 12px; white-space: nowrap; }
-        #goalInput { width: 100%; background-color: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 14px 18px; color: #e0e0e0; font-family: 'Courier New', monospace; font-size: 14px; outline: none; margin-bottom: 12px; display: block; }
+        .input-area { margin-bottom: 12px; }
+        #goalInput { width: 100%; background-color: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 14px 18px; color: #e0e0e0; font-family: 'Courier New', monospace; font-size: 14px; outline: none; margin-bottom: 8px; display: block; text-overflow: clip; direction: ltr; }
         #goalInput:focus { border-color: #00ff88; }
         #goalInput::placeholder { color: #444; }
-        #runButton { background-color: #00ff88; color: #0f0f0f; border: none; border-radius: 6px; padding: 14px 28px; font-family: 'Courier New', monospace; font-size: 14px; font-weight: bold; cursor: pointer; margin-bottom: 16px; }
+        #goalInput.recording { border-color: #ff4444; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { border-color: #ff4444; } 50% { border-color: #ff8888; } 100% { border-color: #ff4444; } }
+        .image-preview { display: none; align-items: center; gap: 10px; background-color: #1a1a1a; border: 1px solid #00ff88; border-radius: 6px; padding: 8px 12px; font-size: 12px; color: #00ff88; margin-bottom: 8px; }
+        .image-preview img { height: 40px; width: 40px; object-fit: cover; border-radius: 4px; }
+        .remove-image { color: #ff4444; cursor: pointer; font-size: 16px; }
+        .image-suggestions { display: none; margin-bottom: 8px; }
+        .image-suggestions-label { font-size: 11px; color: #444; letter-spacing: 1px; margin-bottom: 6px; }
+        .suggestion-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+        .suggestion-btn { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 6px 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 11px; cursor: pointer; transition: border-color 0.2s, color 0.2s; }
+        .suggestion-btn:hover { border-color: #00ff88; color: #00ff88; }
+        .button-row { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+        #runButton { background-color: #00ff88; color: #0f0f0f; border: none; border-radius: 6px; padding: 14px 28px; font-family: 'Courier New', monospace; font-size: 14px; font-weight: bold; cursor: pointer; }
         #runButton:hover { background-color: #00cc6a; }
         #runButton:disabled { background-color: #333; color: #666; cursor: not-allowed; }
+        .image-upload-label { background-color: #1a1a1a; color: #00ff88; border: 1px solid #00ff88; border-radius: 6px; padding: 13px 20px; font-family: 'Courier New', monospace; font-size: 13px; cursor: pointer; white-space: nowrap; }
+        .image-upload-label:hover { background-color: #0a2a1a; }
+        #imageInput { display: none; }
+        #micButton { background-color: #1a1a1a; color: #666; border: 1px solid #333; border-radius: 6px; padding: 13px 18px; font-family: 'Courier New', monospace; font-size: 16px; cursor: pointer; transition: all 0.2s; }
+        #micButton:hover { border-color: #ff4444; color: #ff4444; }
+        #micButton.recording { background-color: #2a1a1a; border-color: #ff4444; color: #ff4444; animation: pulse 1s infinite; }
+        #ttsButton { display: none; background-color: #1a1a1a; color: #00ff88; border: 1px solid #00ff88; border-radius: 6px; padding: 13px 18px; font-family: 'Courier New', monospace; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+        #ttsButton:hover { background-color: #0a2a1a; }
         .status { font-size: 12px; color: #666; margin-bottom: 10px; letter-spacing: 1px; }
         .status.running { color: #ffaa00; }
         .status.done { color: #00ff88; }
+        .status.recording { color: #ff4444; }
+        .status.transcribing { color: #aaaaff; }
         .output-box { background-color: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 24px; min-height: 400px; white-space: pre-wrap; font-size: 13px; line-height: 1.7; overflow-y: auto; max-height: 600px; }
         .placeholder-text { color: #444; font-size: 13px; }
+        .referral-box { background-color: #0a2a1a; border: 1px solid #00ff88; border-radius: 6px; padding: 16px 20px; margin-bottom: 24px; }
+        .referral-title { font-size: 11px; color: #00ff88; letter-spacing: 2px; margin-bottom: 10px; }
+        .referral-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .referral-link { background-color: #1a1a1a; border: 1px solid #333; border-radius: 4px; padding: 8px 12px; font-size: 12px; color: #888; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .copy-btn { background-color: #00ff88; color: #0f0f0f; border: none; border-radius: 4px; padding: 8px 16px; font-family: 'Courier New', monospace; font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap; }
+        .copy-btn:hover { background-color: #00cc6a; }
+        .referral-count { font-size: 12px; color: #666; margin-top: 8px; }
+        .referral-count span { color: #00ff88; }
+        .feedback-box { display: none; margin-top: 16px; padding: 20px; background-color: #1a1a1a; border: 1px solid #222; border-radius: 6px; text-align: center; }
+        .feedback-box p { font-size: 12px; color: #666; letter-spacing: 1px; margin-bottom: 12px; }
+        .feedback-buttons { display: flex; gap: 12px; justify-content: center; }
+        .feedback-btn { background-color: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 10px 24px; font-size: 20px; cursor: pointer; transition: border-color 0.2s; }
+        .feedback-btn:hover { border-color: #00ff88; }
+        .feedback-btn.selected { border-color: #00ff88; background-color: #0a2a1a; }
+        .feedback-thanks { font-size: 13px; color: #00ff88; margin-top: 14px; display: none; letter-spacing: 1px; padding: 10px; background-color: #0a2a1a; border: 1px solid #00ff88; border-radius: 4px; }
+        .approval-box { display: none; margin-top: 16px; padding: 20px; background-color: #1a1a00; border: 2px solid #ffaa00; border-radius: 6px; }
+        .approval-title { font-size: 13px; color: #ffaa00; letter-spacing: 2px; margin-bottom: 12px; }
+        .approval-link { font-size: 12px; color: #888; margin-bottom: 16px; word-break: break-all; }
+        .approval-buttons { display: flex; gap: 12px; }
+        .approve-btn { background-color: #00ff88; color: #0f0f0f; border: none; border-radius: 6px; padding: 12px 24px; font-family: 'Courier New', monospace; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .approve-btn:hover { background-color: #00cc6a; }
+        .reject-btn { background-color: #1a1a1a; color: #ff4444; border: 1px solid #ff4444; border-radius: 6px; padding: 12px 24px; font-family: 'Courier New', monospace; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .reject-btn:hover { background-color: #2a1a1a; }
     </style>
+
+
 </head>
 <body>
     <div class="container">
@@ -43,7 +90,7 @@
                 {% if user.plan == 'pro' %}
                     <div class="plan-pro">PRO — Unlimited</div>
                 {% else %}
-                    <div class="plan-free">FREE — {{ user.runs_today }} / 3 runs used today</div>
+                    <div class="plan-free" id="run-counter-top">FREE — {{ user.runs_today }} / 3 runs used today</div>
                 {% endif %}
                 <div>
                     <a href="/logout">Logout</a>
@@ -56,36 +103,336 @@
 
         {% if user.plan == 'free' %}
         <div class="upgrade-banner">
-            <span>Free plan: {{ user.runs_today }}/3 runs used today. Upgrade for unlimited access.</span>
+            <span id="run-counter-banner">Free plan: {{ user.runs_today }}/3 runs used today. Upgrade for unlimited access.</span>
             <a href="/upgrade">UPGRADE TO PRO</a>
         </div>
         {% endif %}
 
-        <input type="text" id="goalInput" placeholder="Enter your research goal..." />
-        <button id="runButton" onclick="runAgent()">RUN</button>
+        {% if user.referral_code %}
+        <div class="referral-box">
+            <div class="referral-title">🔗 YOUR REFERRAL LINK</div>
+            <div class="referral-row">
+                <div class="referral-link" id="referral-link-text">https://arhamsabri-autonomous-agent.hf.space/signup?ref={{ user.referral_code }}</div>
+                <button class="copy-btn" onclick="copyReferral()">COPY</button>
+            </div>
+            <div class="referral-count">People you have referred: <span>{{ user.referrals_count }}</span></div>
+        </div>
+        {% endif %}
+
+        <div class="input-area">
+            <input type="text" id="goalInput" placeholder="Enter your goal, speak it, or ask about an image..." />
+            <div class="image-preview" id="imagePreview">
+                <img id="previewImg" src="" alt="preview" />
+                <span id="imageName"></span>
+                <span class="remove-image" onclick="removeImage()">✕</span>
+            </div>
+            <div class="image-suggestions" id="imageSuggestions">
+                <div class="image-suggestions-label">SUGGESTED QUESTIONS:</div>
+                <div class="suggestion-buttons">
+                    <button class="suggestion-btn" onclick="setQuestion('What is in this image?')">What is in this image?</button>
+                    <button class="suggestion-btn" onclick="setQuestion('Extract all text from this image')">Extract all text</button>
+                    <button class="suggestion-btn" onclick="setQuestion('What is the total amount on this receipt?')">Receipt total</button>
+                    <button class="suggestion-btn" onclick="setQuestion('List all items and prices from this bill')">List all items</button>
+                    <button class="suggestion-btn" onclick="setQuestion('Summarise this document')">Summarise document</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="button-row">
+            <button id="runButton" onclick="runAgent()">RUN</button>
+            <label class="image-upload-label" for="imageInput">📷 UPLOAD IMAGE</label>
+            <input type="file" id="imageInput" accept="image/*" onchange="handleImageSelect(event)" />
+            <button id="micButton" onclick="toggleRecording()" title="Press to record — press again to stop and transcribe">🎤</button>
+            <button id="ttsButton" onclick="speakAnswer()" title="Play or stop answer speech">🔊 PLAY</button>
+        </div>
 
         <div class="status" id="status"></div>
-
         <div class="output-box" id="output">
             <span class="placeholder-text">Agent output will appear here in real time...</span>
+        </div>
+
+        <div class="approval-box" id="approvalBox">
+            <div class="approval-title">⚠️ APPROVAL REQUIRED</div>
+            <div class="approval-link" id="approvalLink"></div>
+            <div class="approval-buttons">
+                <button class="approve-btn" onclick="handleApproval('approve')">✓ APPROVE APPLICATION</button>
+                <button class="reject-btn" onclick="handleApproval('reject')">✗ REJECT</button>
+            </div>
+        </div>
+
+        <div class="feedback-box" id="feedbackBox">
+            <p>WAS THIS ANSWER HELPFUL?</p>
+            <div class="feedback-buttons">
+                <button class="feedback-btn" onclick="submitFeedback('thumbs_up', this)">👍</button>
+                <button class="feedback-btn" onclick="submitFeedback('thumbs_down', this)">👎</button>
+            </div>
+            <div class="feedback-thanks" id="feedbackThanks">
+                ✓ Thank you for your valuable feedback — it helps us improve the agent!
+            </div>
         </div>
     </div>
 
     <script>
         let pollInterval = null;
+        let runsUsed = {{ user.runs_today }};
+        let currentGoal = "";
+        let currentPendingId = null;
+        let accumulatedOutput = "";
+        let selectedImage = null;
+        let lastAnswer = "";
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+
+        async function toggleRecording() {
+            if (isRecording) {
+                mediaRecorder.stop();
+            } else {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    audioChunks = [];
+                    mediaRecorder = new MediaRecorder(stream);
+
+                    mediaRecorder.ondataavailable = function(e) {
+                        if (e.data.size > 0) audioChunks.push(e.data);
+                    };
+
+                    mediaRecorder.onstop = async function() {
+                        isRecording = false;
+                        document.getElementById("micButton").classList.remove("recording");
+                        document.getElementById("goalInput").classList.remove("recording");
+                        document.getElementById("micButton").textContent = "🎤";
+                        document.getElementById("status").textContent = "TRANSCRIBING...";
+                        document.getElementById("status").className = "status transcribing";
+
+                        const blob = new Blob(audioChunks, { type: "audio/webm" });
+                        const formData = new FormData();
+                        formData.append("audio", blob, "audio.webm");
+
+                        try {
+                            const response = await fetch("/transcribe", {
+                                method: "POST",
+                                body: formData
+                            });
+                            const data = await response.json();
+                            if (data.text) {
+                                const input = document.getElementById("goalInput");
+                                const existing = input.value.trim();
+                                input.value = existing ? existing + " " + data.text : data.text;
+                                document.getElementById("status").textContent = "TRANSCRIPTION DONE — press RUN when ready";
+                                document.getElementById("status").className = "status done";
+                            } else {
+                                document.getElementById("status").textContent = "Transcription failed: " + (data.error || "unknown error");
+                                document.getElementById("status").className = "status";
+                            }
+                        } catch (err) {
+                            document.getElementById("status").textContent = "Transcription error: " + err.message;
+                            document.getElementById("status").className = "status";
+                        }
+
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    document.getElementById("micButton").classList.add("recording");
+                    document.getElementById("goalInput").classList.add("recording");
+                    document.getElementById("micButton").textContent = "⏹";
+                    document.getElementById("goalInput").placeholder = "Recording... press ⏹ to stop";
+                    document.getElementById("status").textContent = "RECORDING — press ⏹ to stop and transcribe";
+                    document.getElementById("status").className = "status recording";
+
+                } catch (err) {
+                    document.getElementById("status").textContent = "Microphone access denied: " + err.message;
+                    document.getElementById("status").className = "status";
+                }
+            }
+        }
+
+        function speakAnswer() {
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                document.getElementById("ttsButton").textContent = "🔊 PLAY";
+                return;
+            }
+
+            if (!lastAnswer) return;
+
+            let cleanText = lastAnswer
+                .replace(/={3,}/g, " ")
+                .replace(/-{3,}/g, " ")
+                .replace(/\[.*?\]/g, " ")
+                .replace(/#{1,6}\s/g, "")
+                .replace(/\*{1,2}/g, "")
+                .replace(/`{1,3}/g, "")
+                .replace(/\n{2,}/g, ". ")
+                .replace(/\n/g, " ")
+                .trim()
+                .substring(0, 500);
+
+            if (!cleanText) return;
+
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            utterance.lang = "en-IN";
+            utterance.rate = 0.9;
+            utterance.pitch = 1;
+            window.speechSynthesis.speak(utterance);
+
+            document.getElementById("ttsButton").textContent = "⏹ STOP";
+            utterance.onend = function() {
+                document.getElementById("ttsButton").textContent = "🔊 PLAY";
+            };
+        }
+
+        function copyReferral() {
+            const link = document.getElementById("referral-link-text").textContent;
+            navigator.clipboard.writeText(link).then(() => {
+                const btn = document.querySelector(".copy-btn");
+                btn.textContent = "COPIED!";
+                setTimeout(() => { btn.textContent = "COPY"; }, 2000);
+            });
+        }
+
+        function updateCounters() {
+            runsUsed += 1;
+            const top = document.getElementById("run-counter-top");
+            if (top) top.textContent = "FREE — " + runsUsed + " / 3 runs used today";
+            const banner = document.getElementById("run-counter-banner");
+            if (banner) banner.textContent = "Free plan: " + runsUsed + "/3 runs used today. Upgrade for unlimited access.";
+        }
+
+        function setQuestion(question) {
+            document.getElementById("goalInput").value = question;
+            document.getElementById("goalInput").focus();
+        }
+
+        function handleImageSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            selectedImage = file;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById("previewImg").src = e.target.result;
+                document.getElementById("imageName").textContent = file.name;
+                document.getElementById("imagePreview").style.display = "flex";
+                document.getElementById("imageSuggestions").style.display = "block";
+            };
+            reader.readAsDataURL(file);
+
+            document.getElementById("goalInput").placeholder = "Ask a question about this image...";
+        }
+
+        function removeImage() {
+            selectedImage = null;
+            document.getElementById("imageInput").value = "";
+            document.getElementById("imagePreview").style.display = "none";
+            document.getElementById("imageSuggestions").style.display = "none";
+            document.getElementById("goalInput").placeholder = "Enter your goal, speak it, or ask about an image...";
+            document.getElementById("goalInput").value = "";
+        }
+
+        function submitFeedback(rating, btn) {
+            const formData = new FormData();
+            formData.append("rating", rating);
+            formData.append("goal", currentGoal);
+            fetch("/feedback", { method: "POST", body: formData })
+            .then(r => r.json())
+            .then(data => {
+                document.querySelectorAll(".feedback-btn").forEach(b => b.classList.remove("selected"));
+                btn.classList.add("selected");
+                document.querySelector(".feedback-buttons").style.display = "none";
+                document.getElementById("feedbackThanks").style.display = "block";
+            });
+        }
+
+        function handleApproval(decision) {
+            if (!currentPendingId) return;
+            const endpoint = decision === "approve"
+                ? `/approve/${currentPendingId}`
+                : `/reject/${currentPendingId}`;
+            fetch(endpoint, { method: "POST" })
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById("approvalBox").style.display = "none";
+                currentPendingId = null;
+                const outputBox = document.getElementById("output");
+                if (decision === "approve") {
+                    outputBox.innerHTML += "\n[You approved — applying now...]\n";
+                } else {
+                    outputBox.innerHTML += "\n[You rejected — skipping this application]\n";
+                }
+                outputBox.scrollTop = outputBox.scrollHeight;
+            });
+        }
+
+        function processLine(line) {
+            accumulatedOutput += line;
+            lastAnswer += line;
+            if (accumulatedOutput.includes("__PENDING_APPROVAL__") && !currentPendingId) {
+                const match = accumulatedOutput.match(/__PENDING_APPROVAL__([a-z0-9]+)__(.+?)__/s);
+                if (match) {
+                    currentPendingId = match[1].trim();
+                    const jobLink = match[2].trim();
+                    document.getElementById("approvalLink").textContent = "Apply to: " + jobLink;
+                    document.getElementById("approvalBox").style.display = "block";
+                    return;
+                }
+            }
+            if (line.includes("__PENDING_APPROVAL__")) return;
+            document.getElementById("output").innerHTML += line;
+            document.getElementById("output").scrollTop = document.getElementById("output").scrollHeight;
+        }
 
         function runAgent() {
             const goal = document.getElementById("goalInput").value.trim();
             if (!goal) { alert("Please enter a goal first."); return; }
+            currentGoal = goal;
+            accumulatedOutput = "";
+            lastAnswer = "";
+            currentPendingId = null;
 
             document.getElementById("output").innerHTML = "";
             document.getElementById("runButton").disabled = true;
+            document.getElementById("ttsButton").style.display = "none";
+            document.getElementById("feedbackBox").style.display = "none";
+            document.getElementById("feedbackThanks").style.display = "none";
+            document.getElementById("approvalBox").style.display = "none";
+            document.querySelector(".feedback-buttons").style.display = "flex";
+            document.querySelectorAll(".feedback-btn").forEach(btn => btn.classList.remove("selected"));
+
+            if (selectedImage) {
+                document.getElementById("status").textContent = "ANALYZING IMAGE...";
+                document.getElementById("status").className = "status running";
+                const formData = new FormData();
+                formData.append("image", selectedImage);
+                formData.append("question", goal);
+
+                fetch("/run-vision", { method: "POST", body: formData })
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById("runButton").disabled = false;
+                    if (data.error) {
+                        document.getElementById("output").innerHTML = "ERROR: " + data.error;
+                        document.getElementById("status").textContent = "ERROR";
+                        document.getElementById("status").className = "status";
+                    } else {
+                        document.getElementById("output").innerHTML = data.answer;
+                        lastAnswer = data.answer;
+                        document.getElementById("status").textContent = "DONE";
+                        document.getElementById("status").className = "status done";
+                        document.getElementById("feedbackBox").style.display = "block";
+                        document.getElementById("ttsButton").style.display = "inline-block";
+                    }
+                });
+                return;
+            }
+
             document.getElementById("status").textContent = "RUNNING...";
             document.getElementById("status").className = "status running";
-
             const formData = new FormData();
             formData.append("goal", goal);
-
             fetch("/run", { method: "POST", body: formData })
             .then(r => r.json())
             .then(data => {
@@ -93,6 +440,7 @@
                     document.getElementById("output").innerHTML = data.error;
                     document.getElementById("runButton").disabled = false;
                     document.getElementById("status").textContent = "ERROR";
+                    document.getElementById("status").className = "status";
                     return;
                 }
                 startPolling(data.job_id);
@@ -101,23 +449,21 @@
 
         function startPolling(jobId) {
             let cursor = 0;
-            const outputBox = document.getElementById("output");
-
             pollInterval = setInterval(() => {
                 fetch(`/poll/${jobId}?cursor=${cursor}`)
                 .then(r => r.json())
                 .then(data => {
-                    data.lines.forEach(line => {
-                        outputBox.innerHTML += line;
-                        outputBox.scrollTop = outputBox.scrollHeight;
-                    });
+                    data.lines.forEach(line => processLine(line));
                     cursor = data.cursor;
-
                     if (data.status === "done") {
                         clearInterval(pollInterval);
                         document.getElementById("runButton").disabled = false;
                         document.getElementById("status").textContent = "DONE";
                         document.getElementById("status").className = "status done";
+                        updateCounters();
+                        document.getElementById("feedbackBox").style.display = "block";
+                        document.getElementById("approvalBox").style.display = "none";
+                        document.getElementById("ttsButton").style.display = "inline-block";
                     }
                 });
             }, 2000);
