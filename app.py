@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-app.secret_key = get_secret("SECRET_KEY") or "your-secret-key-change-this"
+app.secret_key = os.getenv("SECRET_KEY", "your-secret-key-change-this")
 
 app.config['SESSION_COOKIE_SECURE'] = False
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -57,13 +57,9 @@ limiter = Limiter(
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 redis_client = redis.from_url(REDIS_URL)
 
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading", allow_upgrades=False, logger=False, engineio_logger=False)
+# socketio disabled
 
-@socketio.on("join")
-def on_join(data):
-    job_id = data.get("job_id")
-    if job_id:
-        join_room(job_id)
+
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -162,12 +158,10 @@ def process_job(job_id, goal, user_id=None):
                 current_data = json.loads(redis_client.get(job_id))
                 current_data["lines"].append(update)
                 redis_client.setex(job_id, 3600, json.dumps(current_data))
-                socketio.emit("agent_update", {"line": update, "job_id": job_id, "status": "running"}, namespace="/")
 
         final_data = json.loads(redis_client.get(job_id))
         final_data["status"] = "done"
         redis_client.setex(job_id, 3600, json.dumps(final_data))
-        socketio.emit("agent_update", {"line": "", "job_id": job_id, "status": "done"}, namespace="/")
         logger.info(f"Job completed: {job_id}")
     except Exception as e:
         logger.error(f"Job error: {job_id} error={str(e)}")
@@ -687,4 +681,4 @@ def ping():
     return "OK", 200
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=7860)
+    app.run(host="0.0.0.0", port=7860)
