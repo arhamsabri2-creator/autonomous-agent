@@ -66,12 +66,34 @@ limiter = Limiter(
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 redis_client = redis.from_url(REDIS_URL)
+local_redis = redis.from_url("redis://localhost:6379")
 
 # socketio disabled
 
 
 
 login_manager = LoginManager()
+
+def role_required(*roles):
+    def decorator(f):
+        from functools import wraps
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated:
+                return redirect(url_for("login"))
+            user = get_user_by_id(current_user.id)
+            if not user:
+                return redirect(url_for("login"))
+            user_plan = user[4] if isinstance(user, tuple) else user.get("plan", "free")
+            if "admin" in roles and user_plan != "admin":
+                flash("Admin access required", "error")
+                return redirect(url_for("index"))
+            if user_plan not in roles:
+                flash("Access denied - upgrade your plan", "error")
+                return redirect(url_for("index"))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
@@ -187,7 +209,7 @@ def queue_worker():
     logger.info("Queue worker started")
     while True:
         try:
-            item = redis_client.blpop("job_queue", timeout=30)
+            item = local_redis.blpop("job_queue", timeout=30)
             if item:
                 _, data = item
                 job = json.loads(data)
@@ -449,7 +471,7 @@ def run():
     job_id = str(uuid.uuid4())
     job_data = {"status": "queued", "lines": ["Job queued — waiting for worker...\n"]}
     redis_client.setex(job_id, 3600, json.dumps(job_data))
-    redis_client.rpush("job_queue", json.dumps({"job_id": job_id, "goal": goal, "user_id": current_user.id}))
+    local_redis.rpush("job_queue", json.dumps({"job_id": job_id, "goal": goal, "user_id": current_user.id}))
     logger.info(f"Job queued: user_id={current_user.id} job_id={job_id}")
 
     return jsonify({"job_id": job_id})
@@ -514,6 +536,8 @@ def webhook():
     return jsonify({"status": "success"}), 200
 
 @app.route("/admin")
+@login_required
+@role_required("admin")
 def admin():
     admin_password = os.getenv("ADMIN_PASSWORD", "arham123")
     provided = request.args.get("password", "")
