@@ -1,5 +1,6 @@
 import os
 import re
+import time
 from openai import OpenAI
 from dotenv import load_dotenv
 from tools import TOOLS
@@ -9,162 +10,149 @@ load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-SYSTEM_PROMPT = """You are a reasoning agent with memory. You work by thinking step by step and using tools to achieve a goal.
+SYSTEM_PROMPT = """You are Arham's Autonomous Agent — a smart, focused AI assistant built by Arham Sabri. You are professional, direct, and efficient. You never waste steps. You always think before acting. You work by thinking step by step and using tools to achieve a goal.
 
 You must always respond in this exact format:
 
-Thought: [write your thinking here — what do you know, what do you need, what should you do next]
-Action: [write only the tool name here — either: search, summarise, remember, save_to_file, or finish]
+Thought: [answer these 4 questions before acting:
+1. What do I already know? (from memory, previous steps, or general knowledge)
+2. What am I still missing? (what information do I need to answer the goal)
+3. What is the best next action? (which tool will get me what I need)
+4. Why is this action better than alternatives? (briefly justify your choice)]
+Action: [write only the tool name here — either: search, summarise, remember, save_to_file, check_court_cause_list, deep_research, fill_form, evaluate_job, fill_test_login, search_internshala, apply_internshala, save_report, get_calendar, create_calendar_event, get_news, or finish]
 Action Input: [write the input for the tool here]
 
 The tools available to you are:
-- search: use this to search the web for information. Action Input should be a search query.
+- search: use this for ALL goals by default. Use this for quick lookups, facts, news, and any topic where the user has not explicitly asked for deep or comprehensive research. Action Input should be a search query.
 - summarise: use this to compress large amounts of text into clean bullet points. Action Input should be the actual text you want summarised — never a placeholder.
 - remember: use this to save important findings to memory for future use. Action Input should be the key findings you want to remember.
 - save_to_file: use this to save any important content to a file. Action Input should be the content you want saved.
+- check_court_cause_list: use this to check today's Delhi High Court cause list for hearings, case listings, or judgments. Action Input can be left empty or contain a specific case name/number you're looking for.
+- deep_research: use this ONLY when the goal explicitly contains one of these words: "deep", "comprehensive", "thorough", "detailed", or "in-depth". If none of these words appear in the goal — never use deep_research, use search instead. This reads the full content of top web pages. Action Input should be the research topic.
+- fill_form: use this when the goal explicitly asks to fill out or submit a form with specific details. Action Input must be formatted as "name | comment" — the name first, then a pipe character, then the comment or message to submit.
+- evaluate_job: use this when the goal involves checking whether a job posting is worth applying to. Action Input must be formatted as "company | job title | posting text".
+- fill_test_login: use this when the goal explicitly asks to log into or test the practice login page. Action Input must be formatted as "username | password".
+- search_internshala: use this to search for remote internships on Internshala on any topic. Action Input should be the topic keyword only.
+- apply_internshala: use this to apply to a specific internship on Internshala. Action Input must be the full internship link.
+- save_report: use this at the end of every Internshala run to save a summary of what was done. No Action Input needed.
+- get_calendar: use this to get today's calendar events. No Action Input needed.
+- create_calendar_event: use this to create a new calendar event. Action Input must be formatted as "title | date | time".
+- get_news: use this to get latest news on any topic. Action Input should be the topic you want news about (e.g. "AI", "India tech", "cricket").
 - finish: use this when you have enough information to answer the goal completely. Action Input should be your complete final answer.
 
 Rules:
-- Always think before acting
-- If memory context is provided at the start — read it carefully and use it
-- Only search for information that is missing from memory
+- Always think before acting — answer all 4 questions in your Thought before every action
 - Only plan ONE action at a time — never write multiple Action and Action Input pairs in one response
 - Always wait for the Observation before deciding the next action
-- When using summarise — always pass the actual text from the Observation, never a placeholder like [text from search]
-- Use remember to save important findings before finishing
-- Only use finish when you are genuinely satisfied with what you have found
-- Never make up information — only use what you find through search or memory
-- Never add a year to your search queries — always search without years so you get the most recent results
-- Always do at least two searches before finishing — never finish after just one search
+- GUARDRAIL: Only use deep_research if the goal contains: "deep", "comprehensive", "thorough", "detailed", or "in-depth". For all other goals — use search only.
+- If using search, do at least two searches before finishing
+- Never make up information — only use what you find through search, deep_research, or memory
+- Never add a year to your search queries
 """
 
 
-def parse_llm_output(llm_output):
-    action = None
-    action_input = None
-
-    lines = llm_output.split("\n")
-
-    for i, line in enumerate(lines):
-        if line.startswith("Action:"):
-            action = line.replace("Action:", "").strip().lower()
-
-        if line.startswith("Action Input:"):
-            first_line = line.replace("Action Input:", "").strip()
-            remaining_lines = lines[i+1:]
-            all_input_lines = [first_line] + remaining_lines
-            action_input = "\n".join(all_input_lines).strip()
-            break
-
-    return action, action_input
+def detect_topic(goal):
+    goal_lower = goal.lower()
+    if any(word in goal_lower for word in ["job", "internship", "internshala", "apply", "hiring", "work", "career"]):
+        return "job_search"
+    if any(word in goal_lower for word in ["gmail", "email", "mail", "inbox", "send email", "draft"]):
+        return "gmail"
+    if any(word in goal_lower for word in ["research", "find out", "deep research", "investigate", "study", "analyse", "analyze"]):
+        return "research"
+    return "general"
 
 
-def run_agent(goal):
-    yield f"GOAL: {goal}\n"
-    yield "=" * 50 + "\n"
-
-    # Check memory before doing anything else
-    # This is the agent asking Meera — have you seen anything like this before?
-    memory_count = get_memory_count()
-    memory_context = ""
-
-    if memory_count > 0:
-        yield f"\nChecking memory... ({memory_count} memories stored)\n"
-        relevant_memories = search_memory(goal)
-
-        if relevant_memories:
-            memory_context = relevant_memories
-            yield f"\nFOUND RELEVANT MEMORY:\n{memory_context}\n"
-            yield "=" * 50 + "\n"
-        else:
-            yield "\nNo relevant memories found. Starting fresh research.\n"
-            yield "=" * 50 + "\n"
-    else:
-        yield "\nNo memories stored yet. Starting fresh research.\n"
-        yield "=" * 50 + "\n"
-
-    # Build the initial messages
-    # If we have memory context include it at the start
-    # So the agent knows what it already knows before deciding what to search for
-    if memory_context:
-        initial_user_message = f"""Your goal is: {goal}
-
-Here is relevant context from your memory of past research:
-
-{memory_context}
-
-Use this memory as a foundation. Only search for information that is missing or needs updating."""
-    else:
-        initial_user_message = f"Your goal is: {goal}"
-
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": initial_user_message}
-    ]
-
-    max_steps = 10
-
-    for step in range(1, max_steps + 1):
-        yield f"\n--- Step {step} ---\n"
-
+def rewrite_query(goal):
+    try:
         response = client.chat.completions.create(
             model="gpt-4o",
-            messages=messages
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a search query optimizer. Rewrite the goal into a short clean search query of 3 to 6 words. Return only the rewritten query. Never include a year."
+                },
+                {
+                    "role": "user",
+                    "content": f"Rewrite this into a clean search query: {goal}"
+                }
+            ],
+            max_tokens=30
         )
+        return response.choices[0].message.content.strip()
+    except Exception:
+        return goal
 
-        llm_output = response.choices[0].message.content
-        yield llm_output + "\n"
 
-        messages.append({"role": "assistant", "content": llm_output})
+def check_hallucination(observations, final_answer):
+    try:
+        if not observations:
+            return "UNKNOWN — no observations to check against"
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "system",
+                    "content": """You are an AI answer evaluator.
+HALLUCINATION RISK: LOW/MEDIUM/HIGH
+FAITHFULNESS SCORE: 0-100%
+REASON: one sentence
+Respond in exactly this format."""
+                },
+                {
+                    "role": "user",
+                    "content": f"OBSERVATIONS:\n{observations[:3000]}\n\nFINAL ANSWER:\n{final_answer}"
+                }
+            ],
+            max_tokens=120
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        return f"Evaluation failed: {str(e)}"
 
-        action, action_input = parse_llm_output(llm_output)
 
-        if not action:
-            yield "\nAgent did not return a valid action. Stopping.\n"
-            break
+def self_reflect(goal, answer, observations):
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "system",
+                    "content": """You are a self-reflection engine.
+If answer is complete: respond with exactly: REFLECTION: No improvements needed.
+If needs improvement: respond with: REFLECTION: [improved answer]"""
+                },
+                {
+                    "role": "user",
+                    "content": f"GOAL:\n{goal}\n\nOBSERVATIONS:\n{observations[:2000]}\n\nANSWER:\n{answer}"
+                }
+            ],
+            max_tokens=500
+        )
+        result = response.choices[0].message.content.strip()
+        if "No improvements needed" in result:
+            return answer, False
+        improved = result.replace("REFLECTION:", "").strip()
+        return improved, True
+    except Exception:
+        return answer, False
 
-        if action == "finish":
-            # Automatically save the final answer to memory before finishing
-            # This is enforced in code — not left to the agent's discretion
-            # Every single final answer gets remembered permanently
-            # Think of it as the hospital sanitiser dispenser —
-            # it happens automatically, nobody can forget
-            save_to_memory(goal, action_input)
-            yield "\nSaving to memory...\n"
 
-            TOOLS["finish"](action_input)
-            yield "\n" + "=" * 50 + "\n"
-            yield "FINAL ANSWER:\n"
-            yield action_input + "\n"
-            yield "=" * 50 + "\n"
-            break
+def calculate_cost(total_input_tokens, total_output_tokens):
+    input_cost_usd = (total_input_tokens / 1_000_000) * 2.50
+    output_cost_usd = (total_output_tokens / 1_000_000) * 10.00
+    total_cost_usd = input_cost_usd + output_cost_usd
+    total_cost_inr = total_cost_usd * 96.38
+    return total_cost_usd, total_cost_inr
 
-        if action in TOOLS:
-            tool_function = TOOLS[action]
 
-            if action == "search":
-                action_input = re.sub(r'\b(19|20)\d{2}\b', '', action_input).strip()
-
-            observation = tool_function(action_input)
-
-            yield f"\nOBSERVATION:\n{observation}\n"
-
-            messages.append({
-                "role": "user",
-                "content": f"Observation: {observation}"
-            })
-
-        else:
-            messages.append({
-                "role": "user",
-                "content": f"Observation: Tool '{action}' does not exist. Please use only: search, summarise, remember, save_to_file, or finish."
-            })
-
-    else:
-        yield "\nMax steps reached. Agent did not finish in time.\n"
+def run_agent(goal, user_id=None):
+    from agents.coordinator import run_coordinator
+    for update in run_coordinator(goal, user_id=user_id):
+        yield update
 
 
 if __name__ == "__main__":
     goal = input("Enter your goal: ")
     for update in run_agent(goal):
-        print(update, end="")
+        if isinstance(update, str):
+            print(update, end="")
