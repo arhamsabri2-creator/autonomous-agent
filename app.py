@@ -284,7 +284,7 @@ def run_daily_digest():
     logger.info("Daily digest starting...")
     try:
         users = get_all_users()
-        pro_users = [u for u in users if u[3] == 'pro']
+        pro_users = [u for u in users if u[4] in ('pro', 'admin')]
         logger.info(f"Daily digest: found {len(pro_users)} pro users out of {len(users)} total")
 
         for user in pro_users:
@@ -293,7 +293,8 @@ def run_daily_digest():
             user_email = user[2]
 
             try:
-                digest_goal = "latest breaking AI developments and announcements worldwide today"
+                user_interests = user[9] if len(user) > 9 and user[9] else "AI, technology, world news"
+                digest_goal = f"latest news and developments today about: {user_interests}"
                 result_lines = []
                 for update in run_agent(digest_goal):
                     if isinstance(update, str):
@@ -683,6 +684,27 @@ def telegram_webhook():
         logger.error(f"Telegram webhook error: {e}")
         return jsonify({"status": "error"}), 200
 
+
+@app.route("/settings", methods=["GET", "POST"])
+@login_required
+def settings():
+    from database import get_db
+    user = get_user_by_id(current_user.id)
+    if request.method == "POST":
+        interests = request.form.get("interests", "AI, technology, world news")
+        try:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute("UPDATE users SET interests = %s WHERE id = %s", (interests, current_user.id))
+            conn.commit()
+            cursor.close()
+            conn.close()
+            flash("Interests updated successfully", "success")
+        except Exception as e:
+            flash(f"Error updating interests: {str(e)}", "error")
+        return redirect(url_for("settings"))
+    current_interests = user[9] if user and len(user) > 9 and user[9] else "AI, technology, world news"
+    return render_template("settings.html", interests=current_interests, user=user)
 
 @app.route("/trigger-digest")
 def trigger_digest():

@@ -87,12 +87,15 @@
             </div>
             <div class="header-right">
                 <div class="user-name">{{ user.name }}</div>
-                {% if user.plan == 'pro' %}
+                {% if user.plan == "admin" %}
+                    <div class="plan-pro">ADMIN — Unlimited</div>
+                {% elif user.plan == "pro" %}
                     <div class="plan-pro">PRO — Unlimited</div>
                 {% else %}
                     <div class="plan-free" id="run-counter-top">FREE — {{ user.runs_today }} / 3 runs used today</div>
                 {% endif %}
                 <div>
+                    <a href="/settings" style="color: #666; text-decoration: none; font-size: 12px; margin-right: 16px;">Settings</a>
                     <a href="/logout">Logout</a>
                     {% if user.plan == 'free' %}
                         &nbsp;·&nbsp;<a href="/upgrade">Upgrade</a>
@@ -448,6 +451,7 @@
         }
 
         function startPolling(jobId) {
+            if (pollInterval) clearInterval(pollInterval);
             let cursor = 0;
             pollInterval = setInterval(() => {
                 fetch(`/poll/${jobId}?cursor=${cursor}`)
