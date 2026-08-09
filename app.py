@@ -707,6 +707,37 @@ def settings():
     current_interests = user[9].strip() if user and len(user) > 9 and user[9] else "AI, technology, world news"
     return render_template("settings.html", interests=current_interests, user=user)
 
+@app.route("/summarize-meeting", methods=["GET", "POST"])
+@login_required
+def summarize_meeting():
+    if request.method == "GET":
+        return render_template("meeting.html", user=get_user_by_id(current_user.id))
+    try:
+        audio_file = request.files.get("audio")
+        if not audio_file:
+            return jsonify({"error": "No audio file provided"}), 400
+        audio_bytes = audio_file.read()
+        file_ext = audio_file.filename.split(".")[-1].lower() if audio_file.filename else "mp3"
+        mime_type = f"audio/{file_ext}"
+        transcript = vision_client.audio.transcriptions.create(
+            model="whisper-1",
+            file=(audio_file.filename or "meeting.mp3", audio_bytes, mime_type),
+        )
+        transcript_text = transcript.text
+        summary_response = vision_client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are a meeting summarizer. Extract key points, decisions, action items and next steps from meeting transcripts. Format clearly with sections."},
+                {"role": "user", "content": "Summarize this meeting transcript:\n\n" + transcript_text},
+            ],
+            max_tokens=1000
+        )
+        summary = summary_response.choices[0].message.content
+        return jsonify({"transcript": transcript_text, "summary": summary})
+    except Exception as e:
+        logger.error(f"Meeting summarizer error: {e}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/trigger-digest")
 def trigger_digest():
     admin_password = os.getenv("ADMIN_PASSWORD", "arham123")

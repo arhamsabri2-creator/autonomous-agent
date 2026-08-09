@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting Summarizer — Autonomous Agent</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #0f0f0f; color: #e0e0e0; font-family: 'Courier New', monospace; min-height: 100vh; padding: 40px 20px; }
+        .container { width: 100%; max-width: 700px; margin: 0 auto; }
+        h1 { font-size: 24px; color: #00ff88; margin-bottom: 8px; letter-spacing: 2px; }
+        .subtitle { font-size: 13px; color: #666; margin-bottom: 40px; letter-spacing: 1px; }
+        .upload-area { border: 2px dashed #333; border-radius: 8px; padding: 40px; text-align: center; margin-bottom: 20px; cursor: pointer; }
+        .upload-area input { display: none; }
+        .upload-label { color: #666; font-size: 14px; }
+        .upload-label span { color#00ff88; }
+        button { background-color: #00ff88; color: #0f0f0f; border: none; border-radius: 6px; padding: 14px 28px; font-family: 'Courier New', monospace; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+        button:disabled { background-color: #333; color: #666; cursor: not-allowed; }
+        .result { margin-top: 30px; }
+        .result h2 { color: #00ff88; font-size: 16px; margin-bottom: 12px; }
+        .result-box { background-color: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 20px; font-size: 13px; line-height: 1.8; white-space: pre-wrap; margin-bottom: 20px; }
+        .status { color: #666; font-size: 13px; margin-top: 10px; }
+        .back { display: block; text-align: center; margin-top: 24px; font-size: 13px; color: #00ff88; text-decoration: none; }
+        .file-name { color: #00ff88; font-size: 13px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MEETING SUMMARIZER</h1>
+        <p class="subtitle">Upload audio — get instant summary with action items</p>
+        <div class="upload-area" onclick="document.getElementById('audioFile').click()">
+            <input type="file" id="audioFile" accept="audio/*" onchange="showFileName(this)">
+            <div class="upload-label">Click to upload audio file<br><span>MP3, WAV, M4A, WEBM supported</span></div>
+            <div class="file-name" id="fileName"></div>
+        </div>
+        <button id="summarizeBtn" onclick="summarize()" disabled>SUMMARIZE MEETING</button>
+        <div class="status" id="status"></div>
+        <div class="result" id="result" style="display:none">
+            <h2>SUMMARY</h2>
+            <div class="result-box" id="summary"></div>
+            <h2>FULL TRANSCRIPT</h2>
+            <div class="result-box" id="transcript"></div>
+        </div>
+        <a href="/dashboard" class="back">Back to Dashboard</a>
+    </div>
+    <script>
+        function showFileName(input) {
+            if (input.files && input.files[0]) {
+              document.getElementById('fileName').textContent = input.files[0].name;
+                document.getElementById('summarizeBtn').disabled = false;
+            }
+        }
+        async function summarize() {
+            const file = document.getElementById('audioFile').files[0];
+            if (!file) return;
+            document.getElementById('summarizeBtn').disabled = true;
+            document.getElementById('status').textContent = 'Transcribing audio... this may take a minute';
+            document.getElementById('result').style.display = 'none';
+            const formData = new FormData();
+            formData.append('audio', file);
+            try {
+                const response = await fetch('/summarize-meeting', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (data.error) {
+                    document.getElementById('status').textContent = 'Error: ' + data.error;
+                } else {
+                    document.getElementById('summary').textContent = data.summary;
+                    document.getElementById('transcript').textContent = data.transcript;
+                    document.getElementById('result').style.display = 'block';
+                    document.getElementById('status').textContent = '';
+                }
+            } catch (e) {
+                document.getElementById('status').textContent = 'Error: ' + e.message;
+            }
+            document.getElementById('summarizeBtn').disabled = false;
+        }
+    </script>
+</body>
+</html>
