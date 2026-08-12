@@ -540,28 +540,10 @@ def webhook():
 @login_required
 @role_required("admin")
 def admin():
-    admin_password = os.getenv("ADMIN_PASSWORD", "arham123")
-    provided = request.args.get("password", "")
-    if provided != admin_password:
-        return """
-        <html>
-        <body style="background:#0f0f0f;color:#e0e0e0;font-family:monospace;display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;gap:20px;">
-            <div style="color:#00ff88;font-size:20px;letter-spacing:2px;">ADMIN ACCESS</div>
-            <form method="GET">
-                <input name="password" type="password" placeholder="Enter admin password"
-                style="background:#1a1a1a;border:1px solid #333;color:#e0e0e0;padding:12px;font-family:monospace;border-radius:4px;width:300px;">
-                <button type="submit"
-                style="background:#00ff88;color:#0f0f0f;border:none;padding:12px 24px;font-family:monospace;font-weight:bold;border-radius:4px;cursor:pointer;margin-left:10px;">
-                ENTER</button>
-            </form>
-        </body>
-        </html>
-        """, 401
-
     from database import get_all_users
     users = get_all_users()
     total_users = len(users)
-    pro_users = sum(1 for u in users if u[3] == 'pro')
+    pro_users = sum(1 for u in users if u[4] == 'pro')
     free_users = total_users - pro_users
     total_runs_today = sum(u[4] for u in users)
 
@@ -737,6 +719,11 @@ def summarize_meeting():
     except Exception as e:
         logger.error(f"Meeting summarizer error: {e}")
         return jsonify({"error": str(e)}), 500
+
+@app.route("/guide")
+@login_required
+def guide():
+    return render_template("docs.html", user=get_user_by_id(current_user.id))
 
 @app.route("/trigger-digest")
 def trigger_digest():

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guide — Autonomous Agent</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #0f0f0f; color: #e0e0e0; font-family: 'Courier New', monospace; padding: 40px 20px; }
+        .container { width: 100%; max-width: 800px; margin: 0 auto; }
+        h1 { font-size: 28px; color: #00ff88; margin-bottom: 8px; letter-spacing: 2px; }
+        .subtitle { font-size: 13px; color: #666; margin-bottom: 50px; letter-spacing: 1px; }
+        h2 { font-size: 16px; color: #00ff88; margin-bottom: 20px; letter-spacing: 2px; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px; }
+        .section { margin-bottom: 50px; }
+        .example-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; margin-bottom:0px; }
+        .example-card { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 16px; cursor: pointer; transition: border-color 0.2s; }
+        .example-card:hover { border-color: #00ff88; }
+        .example-card .category { font-size: 11px; color: #666; letter-spacing: 1px; margin-bottom: 8px; }
+        .example-card .goal { font-size: 13px; color: #e0e0e0; line-height: 1.5; }
+        .example-card .try { font-size: 11px; color: #00ff88; margin-top: 10px; }
+        .feature-list { list-style: none; }
+        .feature-list li { padding: 12px 0; border-bottom: 1px solid #1a1a1a; font-size: 13px; line-height: 1.6; }
+        .feature-list li:last-child { border-bottom: none; }
+        .feature-name { color: #00ff88; font-weight: bold; }
+        .faq-item { margin-bottom: 20px; }
+        .faq-question { color: #00ff88; font-size: 14px; margin-bottom: 8px; }
+        .faq-answer { color: #999; font-size: 13px; line-height: 1.6; }
+        .back { display: inline-block; color: #666; text-decoration: none; font-size: 13px; margin-bottom: 40px; }
+        .back:hover { color: #00ff88; }
+        .toast { display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #00ff88; color: #0f0f0f; padding: 12px 24px; border-radius: 6px; font-size: 13px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/dashboard" class="back">← Back to Dashboard</a>
+        <h1>HOW TO USE YOUR AGENT</h1>
+        <p class="subtitle">Click any example to try it instantly</p>
+
+        <div class="section">
+            <h2>RESEARCH & INFORMATION</h2>
+            <div class="example-grid">
+                <div class="example-card" onclick="tryGoal('latest AI news and breakthroughs today')">
+                    <div class="category">NEWS</div>
+                    <div class="goal">latest AI news and breakthroughs today</div>
+                    <div class="try">→ Click to try</div>
+                </div>
+                <div class="example-carnclick="tryGoal('what is quantum computing and how does it work')">
+                    <div class="category">RESEARCH</div>
+                    <div class="goal">what is quantum computing and how does it work</div>
+                    <div class="try">→ Click to try</div>
+                </div>
+                <div class="example-card" onclick="tryGoal('latest developments in India tech startup ecosystem')">
+                    <div class="category">INDIA TECH</div>
+                    <div class="goal">latest developments in India tech startup ecosystem</div>
+                    <div class="try">→ Click to try</div>
+                </div>
+                <div class="example-card" onclick="tryGoal('summarize the current state of large language models')">
+                    <div class="category">AI RESEARCH</div>
+                    <div class="goal">summarize the current state of large language models</div>
+                    <div class="try">→ Click to try</div>
+                </div>
+            
+        </div>
+
+        <div class="section">
+            <h2>CALENDAR & PRODUCTIVITY</h2>
+            <div class="example-grid">
+                <div class="example-card" onclick="tryGoal('what do I have on my calendar today')">
+                    <div class="category">CALENDAR</div>
+                    <div class="goal">what do I have on my calendar today</div>
+                    <div class="try">→ Click to try</div>
+                </div>
+                <div class="example-card" onclick="tryGoal('schedule a team meeting tomorrow at 3pm')">
+                    <div class="category">SCHEDULE</div>
+                    <div class="goal">schedule a team meeting tomorrow at 3pm</div>
+                    <div class="try">→ Click to try</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>MEMORY & PERSONAL ASSISTANT</h2>
+            <div class="example-grid">
+                <div class="example-card" onclick="tryGoal('remember that I prefer Python  JavaScript for backend projects')">
+                    <div class="category">MEMORY</div>
+                    <div class="goal">remember that I prefer Python over JavaScript for backend projects</div>
+                    <div class="try">→ Click to try</div>
+                </div>
+                <div class="example-card" onclick="tryGoal('what do you remember about my preferences')">
+                    <div class="category">RECALL</div>
+                    <div class="goal">what do you remember about my preferences</div>
+                    <div class="try">→ Click to try</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>AVAILABLE FEATURES</h2>
+            <ul class="feature-list">
+                <li><span class="feature-name">🔍 Web Search</span> — Search and summarize information from the web in real time</li>
+                <li><span class="feature-name">📰 News</span> — Get latest news on any topic using dedicated NewsAPI</li>     <li><span class="feature-name">🧠 Memory</span> — Save and recall personal preferences and past findings</li>
+                <li><span class="feature-name">📅 Calendar</span> — Check and create Google Calendar events</li>
+                <li><span class="feature-name">🎙️ Voice Input</span> — Click the mic button to speak your goal</li>
+                <li><span class="feature-name">🔊 Text to Speech</span> — Click PLAY after a result to hear it read aloud</li>
+                <li><span class="feature-name">📷 Image Analysis</span> — Upload an image and ask questions about it</li>
+                <li><span class="feature-name">🎤 Meeting Summarizer</span> — Upload audio to get instant meeting summary</li>
+                <li><span class="feature-name">📊 Deep Research</span> — Add "deep research" to your goal for comprehensive analysis</li>
+                <li><span class="feature-name">⚙️ Daily Digest</span> — Set your interests in Settings for a personalized 6pm b   </div>
+
+        <div class="section">
+            <h2>FREQUENTLY ASKED QUESTIONS</h2>
+            <div class="faq-item">
+                <div class="faq-question">How do I get better results?</div>
+                <div class="faq-answer">Be specific with your goals. Instead of "AI news", try "latest AI news about large language models today". The more specific, the better the results.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">How do I use deep research?</div>
+                <div class="faq-answer">Add "deep research" or "comprehensive" to your goal. Example: "deep research on quantum computing applications in 2026".</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">How does memory work?</div>
+                <div class="faq-answer">Tell the agent to "remember" something. Next time you ask a related question, it will use that memory to give you personalized results.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">How do I personalize my daily digest?</div>
+                <div class="faq-answer">Go to Settings and enter your interests separated by commas. Example: "AI, cricket, stocks, India tech". You'll get a personalized briefing at 6pm IST.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">What is the run limit?</div>
+                <div class="faq-answer">Free users get 3 runs per day. Pro users get unlimited runs. Upgrade from the dashboard.</div>
+            </div>
+        </div>
+    </div>
+    <div class="toast" id="toast">Goal copied to dashboard!</div>
+    <script>
+        function tryGoal(goal) {
+            sessionStorage.setItem('pendingGoal', goal);
+            window.location.href = '/dashboard';
+        }
+    </script>
+</body>
+</html>

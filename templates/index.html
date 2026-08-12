@@ -95,6 +95,8 @@
                     <div class="plan-free" id="run-counter-top">FREE — {{ user.runs_today }} / 3 runs used today</div>
                 {% endif %}
                 <div>
+                    <a href="/guide" style="color: #666; text-decoration: none; font-size: 12px; margin-right: 16px;">Guide</a>
+                    <a href="/guide" style="color: #666; text-decoration: none; font-size: 12px; margin-right: 16px;">Guide</a>
                     <a href="/settings" style="color: #666; text-decoration: none; font-size: 12px; margin-right: 16px;">Settings</a>
                     <a href="/logout">Logout</a>
                     {% if user.plan == 'free' %}
@@ -471,6 +473,13 @@
                     }
                 });
             }, 2000);
+        }
+
+        // Check for pending goal from docs page
+        const pendingGoal = sessionStorage.getItem('pendingGoal');
+        if (pendingGoal) {
+            document.getElementById("goalInput").value = pendingGoal;
+            sessionStorage.removeItem('pendingGoal');
         }
 
         document.getElementById("goalInput").addEventListener("keypress", function(e) {
